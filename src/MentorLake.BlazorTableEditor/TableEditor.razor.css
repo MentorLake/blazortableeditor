@@ -11,10 +11,6 @@
 	user-select: none;
 }
 
-.bte-root:focus {
-	box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.25);
-}
-
 .bte-toolbar {
 	display: flex;
 	flex-wrap: wrap;

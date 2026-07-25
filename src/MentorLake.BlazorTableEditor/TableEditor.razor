@@ -9,33 +9,36 @@
      @oncontextmenu="OnRootContextMenu"
      @oncontextmenu:preventDefault="true">
 
-	<div class="bte-toolbar">
-		<button type="button" @onclick="UndoAsync" disabled="@(!Context.CanUndo)">Undo</button>
-		<button type="button" @onclick="RedoAsync" disabled="@(!Context.CanRedo)">Redo</button>
-		<button type="button" @onclick="CopyAsync">Copy</button>
-		<button type="button" @onclick="CutAsync">Cut</button>
-		<button type="button" @onclick="PasteAsync">Paste</button>
-		<button type="button" @onclick="InsertRowAtActive">Insert Row</button>
-		<button type="button" @onclick="DeleteRowAtActive">Delete Row</button>
-		<button type="button" @onclick="InsertColAtActive">Insert Col</button>
-		<button type="button" @onclick="DeleteColAtActive">Delete Col</button>
-		<button type="button" @onclick="ExportCsvAsync">Export CSV</button>
-		<button type="button" class="bte-file-btn" @onclick="TriggerCsvImport">Import CSV</button>
-		<InputFile @ref="_csvInput" id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelected"
-		           accept=".csv,text/csv"/>
-		<span class="bte-status">
-            @Context.Model.RowCount × @Context.Model.ColumnCount
-			| Active (@(Context.ActiveCell.Row + 1), @GetActiveColName())
-			@if (Context.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))
-			{
-				<text> | Sel @sel.Height×@sel.Width</text>
-			}
-			@if (!string.IsNullOrEmpty(_csvStatus))
-			{
-				<text> | @_csvStatus</text>
-			}
-        </span>
-	</div>
+	@if (ShowToolbar)
+	{
+		<div class="bte-toolbar">
+			<button type="button" @onclick="UndoAsync" disabled="@(!Context.CanUndo)">Undo</button>
+			<button type="button" @onclick="RedoAsync" disabled="@(!Context.CanRedo)">Redo</button>
+			<button type="button" @onclick="CopyAsync">Copy</button>
+			<button type="button" @onclick="CutAsync">Cut</button>
+			<button type="button" @onclick="PasteAsync">Paste</button>
+			<button type="button" @onclick="InsertRowAtActive">Insert Row</button>
+			<button type="button" @onclick="DeleteRowAtActive">Delete Row</button>
+			<button type="button" @onclick="InsertColAtActive">Insert Col</button>
+			<button type="button" @onclick="DeleteColAtActive">Delete Col</button>
+			<button type="button" @onclick="ExportCsvAsync">Export CSV</button>
+			<button type="button" class="bte-file-btn" @onclick="TriggerCsvImport">Import CSV</button>
+			<InputFile @ref="_csvInput" id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelected"
+			           accept=".csv,text/csv"/>
+			<span class="bte-status">
+	            @Context.Model.RowCount × @Context.Model.ColumnCount
+				| Active (@(Context.ActiveCell.Row + 1), @GetActiveColName())
+				@if (Context.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))
+				{
+					<text> | Sel @sel.Height×@sel.Width</text>
+				}
+				@if (!string.IsNullOrEmpty(_csvStatus))
+				{
+					<text> | @_csvStatus</text>
+				}
+	        </span>
+		</div>
+	}
 
 	<div class="bte-sheet">
 		<div class="bte-viewport" @ref="_viewportRef" @onscroll="OnViewportScroll">
