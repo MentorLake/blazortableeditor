@@ -1,0 +1,219 @@
+@using BlazorTableEditor.Models
+
+<div class="bte-root @(_isResizingCol ? "is-col-resizing" : null)"
+     tabindex="0"
+     @ref="_rootRef"
+     @onkeydown="OnKeyDown"
+     @onmouseup="OnGlobalMouseUp"
+     @onmouseleave="OnRootMouseLeave"
+     @oncontextmenu="OnRootContextMenu"
+     @oncontextmenu:preventDefault="true">
+
+	<div class="bte-toolbar">
+		<button type="button" @onclick="CopyAsync">Copy</button>
+		<button type="button" @onclick="CutAsync">Cut</button>
+		<button type="button" @onclick="PasteAsync">Paste</button>
+		<button type="button" @onclick="InsertRowAtActive">Insert Row</button>
+		<button type="button" @onclick="DeleteRowAtActive">Delete Row</button>
+		<button type="button" @onclick="InsertColAtActive">Insert Col</button>
+		<button type="button" @onclick="DeleteColAtActive">Delete Col</button>
+		<button type="button" @onclick="ExportCsvAsync">Export CSV</button>
+		<button type="button" class="bte-file-btn" @onclick="TriggerCsvImport">Import CSV</button>
+		<InputFile @ref="_csvInput" id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelected"
+		           accept=".csv,text/csv"/>
+		<span class="bte-status">
+            @Context.Model.RowCount × @Context.Model.ColumnCount
+			| Active (@(Context.ActiveCell.Row + 1), @GetActiveColName())
+			@if (Context.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))
+			{
+				<text> | Sel @sel.Height×@sel.Width</text>
+			}
+			@if (!string.IsNullOrEmpty(_csvStatus))
+			{
+				<text> | @_csvStatus</text>
+			}
+        </span>
+	</div>
+
+	<div class="bte-sheet">
+		<div class="bte-viewport" @ref="_viewportRef" @onscroll="OnViewportScroll">
+			<div class="bte-canvas"
+			     style="@($"width:{SheetContext.RowHeaderWidth + Context.GetTotalWidth()}px;height:{SheetContext.ColumnHeaderHeight + Context.GetTotalHeight()}px;")"
+			     @onmousemove="OnCanvasMouseMove"
+			     @onmouseup="OnGlobalMouseUp">
+
+				<div class="bte-header-row"
+				     style="@($"height:{SheetContext.ColumnHeaderHeight}px;width:{SheetContext.RowHeaderWidth + Context.GetTotalWidth()}px;")">
+					<div class="bte-corner"
+					     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{SheetContext.ColumnHeaderHeight}px;")"></div>
+					<div class="bte-col-track"
+					     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Context.GetTotalWidth()}px;height:{SheetContext.ColumnHeaderHeight}px;")">
+						@for (int c = _firstCol; c <= _lastCol; c++)
+						{
+							var col = c;
+							var left = Context.GetColumnLeft(col);
+							var width = Context.GetColumnWidth(col);
+							var colSelected = Context.IsColumnHeaderSelected(col);
+							var colPressed = _pressedColHeader == col;
+							<div
+								class="bte-col-header @(colSelected ? "is-selected" : null) @(colPressed ? "is-pressed" : null)"
+								role="button"
+								tabindex="-1"
+								style="@($"left:{left}px;width:{width}px;height:{SheetContext.ColumnHeaderHeight}px;")"
+								@onmousedown="e => OnColHeaderMouseDown(col, e)"
+								@onmouseup="OnHeaderMouseUp"
+								@onmouseleave="OnHeaderMouseUp"
+								@oncontextmenu="e => OpenContextMenu(e, 0, col)"
+								@oncontextmenu:preventDefault="true"
+								@oncontextmenu:stopPropagation="true">
+								<span class="bte-header-label">@Context.Model.ColumnHeaders[col]</span>
+								<div class="bte-resize-col"
+								     @onmousedown:preventDefault="true"
+								     @onmousedown:stopPropagation="true"
+								     @onmousedown="e => BeginColResize(col, e)"></div>
+							</div>
+						}
+					</div>
+				</div>
+
+				<div class="bte-body-area"
+				     style="@($"height:{Context.GetTotalHeight()}px;width:{SheetContext.RowHeaderWidth + Context.GetTotalWidth()}px;")">
+					<div class="bte-row-track"
+					     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{Context.GetTotalHeight()}px;")">
+						@for (int r = _firstRow; r <= _lastRow; r++)
+						{
+							var row = r;
+							var top = Context.GetRowTop(row);
+							var height = Context.GetRowHeight(row);
+							var rowSelected = Context.IsRowHeaderSelected(row);
+							var rowPressed = _pressedRowHeader == row;
+							<div
+								class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
+								role="button"
+								tabindex="-1"
+								style="@($"top:{top}px;height:{height}px;width:{SheetContext.RowHeaderWidth}px;line-height:{height}px;")"
+								@onmousedown="e => OnRowHeaderMouseDown(row, e)"
+								@onmouseup="OnHeaderMouseUp"
+								@onmouseleave="OnHeaderMouseUp"
+								@oncontextmenu="e => OpenContextMenu(e, row, 0)"
+								@oncontextmenu:preventDefault="true"
+								@oncontextmenu:stopPropagation="true">
+								<span class="bte-header-label">@Context.Model.RowHeaders[row]</span>
+								<div class="bte-resize-row"
+								     @onmousedown:stopPropagation="true"
+								     @onmousedown="e => BeginRowResize(row, e)"></div>
+							</div>
+						}
+					</div>
+
+					<div class="bte-cell-track"
+					     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Context.GetTotalWidth()}px;height:{Context.GetTotalHeight()}px;")">
+						@for (int r = _firstRow; r <= _lastRow; r++)
+						{
+							var row = r;
+							var top = Context.GetRowTop(row);
+							var height = Context.GetRowHeight(row);
+
+							for (int c = _firstCol; c <= _lastCol; c++)
+							{
+								var col = c;
+								var left = Context.GetColumnLeft(col);
+								var width = Context.GetColumnWidth(col);
+								var isActive = Context.IsActive(row, col);
+								var isSelected = Context.IsSelected(row, col);
+								var inFill = Context.DragFillPreview?.Contains(new CellPosition(row, col)) == true
+								             && !Context.IsSelected(row, col);
+								var inClipboard = IsInClipboardSource(row, col);
+								var cell = Context.GetValue(row, col);
+								var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, _clipboardMode);
+								var style = BuildCellStyle(left, top, width, height, cell);
+
+								<div class="@css"
+								     style="@style"
+								     @onmousedown="e => OnCellMouseDown(row, col, e)"
+								     @onmouseenter="() => OnCellMouseEnter(row, col)"
+								     @ondblclick="() => BeginEdit(row, col)"
+								     @oncontextmenu="e => OpenContextMenu(e, row, col)"
+								     @oncontextmenu:preventDefault="true"
+								     @oncontextmenu:stopPropagation="true">
+									@Context.GetCellDisplay(row, col)
+								</div>
+							}
+						}
+
+						@if (Context.CurrentSelection is { } selection)
+						{
+							var box = GetRegionBox(selection);
+							<div class="bte-selection" style="@box">
+								<div class="bte-fill-handle"
+								     @onmousedown:stopPropagation="true"
+								     @onmousedown="OnFillHandleMouseDown"></div>
+							</div>
+						}
+
+						@if (Context.IsDragFilling && Context.DragFillPreview is { } fill)
+						{
+							<div class="bte-fill-preview" style="@GetRegionBox(fill)"></div>
+						}
+
+						@if (_clipboardSource is { } clipSrc && _clipboardMode != ClipboardVisualMode.None)
+						{
+							<div class="@GetClipboardOverlayClass()" style="@GetRegionBox(clipSrc)" aria-hidden="true">
+								<span class="bte-clipboard-badge">@GetClipboardBadgeText()</span>
+							</div>
+						}
+
+						@if (_isEditing && _editPos.IsValid)
+						{
+							var eLeft = Context.GetColumnLeft(_editPos.Col);
+							var eTop = Context.GetRowTop(_editPos.Row);
+							var eWidth = Context.GetColumnWidth(_editPos.Col);
+							var eHeight = Context.GetRowHeight(_editPos.Row);
+							<input @ref="_editorRef"
+							       class="bte-editor"
+							       style="@($"left:{eLeft}px;top:{eTop}px;width:{eWidth}px;height:{eHeight}px;")"
+							       @bind="_editValue"
+							       @bind:event="oninput"
+							       @onkeydown="OnEditorKeyDown"
+							       @onkeydown:stopPropagation="true"
+							       @onblur="CommitEdit"/>
+						}
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	@if (_contextMenuOpen)
+	{
+		<div class="bte-context-backdrop"
+		     @onmousedown="CloseContextMenu"
+		     @oncontextmenu="CloseContextMenu"
+		     @oncontextmenu:preventDefault="true"></div>
+		<div class="bte-context-menu"
+		     style="@($"left:{_contextMenuX}px;top:{_contextMenuY}px;")"
+		     @onmousedown:stopPropagation="true">
+			<button type="button" class="bte-context-item" @onclick="ContextInsertColLeft">Insert column left</button>
+			<button type="button" class="bte-context-item" @onclick="ContextInsertColRight">Insert column right</button>
+			<button type="button" class="bte-context-item" @onclick="ContextDeleteColumn"
+			        disabled="@(!CanDeleteColumn)">Delete column
+			</button>
+			<div class="bte-context-separator"></div>
+			<button type="button" class="bte-context-item" @onclick="ContextInsertRowAbove">Insert row above</button>
+			<button type="button" class="bte-context-item" @onclick="ContextInsertRowBelow">Insert row below</button>
+			<button type="button" class="bte-context-item" @onclick="ContextDeleteRow" disabled="@(!CanDeleteRow)">
+				Delete row
+			</button>
+			<div class="bte-context-separator"></div>
+			<button type="button" class="bte-context-item" @onclick="ContextCutAsync">
+				<span>Cut</span><span class="bte-context-shortcut">Ctrl+X</span>
+			</button>
+			<button type="button" class="bte-context-item" @onclick="ContextCopyAsync">
+				<span>Copy</span><span class="bte-context-shortcut">Ctrl+C</span>
+			</button>
+			<button type="button" class="bte-context-item" @onclick="ContextPasteAsync">
+				<span>Paste</span><span class="bte-context-shortcut">Ctrl+V</span>
+			</button>
+		</div>
+	}
+</div>

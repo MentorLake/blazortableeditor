@@ -1,0 +1,76 @@
+# BlazorTableEditor
+
+A high-performance, Excel-like table editor component library for Blazor.
+
+## Features
+
+- **Virtualized rendering** — Handles thousands of cells efficiently.
+- **Full keyboard support** — Arrow keys, Shift+selection, Enter/F2 edit, Tab, Delete, Escape.
+- **Mouse interactions** — Click/drag selection, double-click edit, column/row resize, drag-fill handle.
+- **Clipboard** — Copy, Cut, Paste with system clipboard (TSV) + internal buffer.
+- **CSV** — Export (data only) and Import CSV.
+- **Context menu** — Right-click for insert/delete row/column + clipboard actions.
+- **Header selection** — Click column header to select whole column, row number to select whole row.
+- **Styling** — Button-like headers, selection highlighting, fill preview, marching ants clipboard indicator.
+
+## Installation
+
+```bash
+dotnet add package BlazorTableEditor
+```
+
+## Usage
+
+```razor
+@using BlazorTableEditor
+
+<BlazorGridEditor Model="myModel" />
+```
+
+### Basic setup in a page/component
+
+```razor
+@page "/editor"
+@using BlazorTableEditor.Models
+
+<BlazorGridEditor Model="@model" ModelChanged="OnModelChanged" />
+
+@code {
+    private TableDataModel model = new TableDataModel(50, 10);
+
+    protected override void OnInitialized()
+    {
+        model.AddSampleData();
+    }
+
+    private void OnModelChanged(TableDataModel updated)
+    {
+        model = updated;
+    }
+}
+```
+
+### JavaScript (required)
+
+The component requires its JS file. Reference it in your app (usually in `App.razor` or `_Layout.cshtml`):
+
+```html
+<script src="_content/BlazorTableEditor/js/blazorGridEditor.js"></script>
+```
+
+CSS is automatically included via the library's static assets.
+
+## CSV
+
+- `model.ToCsv(includeHeaders: false)` — export data rows only.
+- `TableDataModel.FromCsv(csvText, firstRowIsHeader: true)` — import.
+
+The component exposes `ExportCsvAsync` / file-based import in its toolbar when used directly.
+
+## Styling
+
+Override styles by targeting `.bte-root`, `.bte-cell`, `.bte-col-header`, etc.
+
+## License
+
+MIT
