@@ -92,6 +92,25 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 			await EnsureJsInitializedAsync();
 		}
 
+		if (_clearResizeClassAfterRender)
+		{
+			_clearResizeClassAfterRender = false;
+			_isResizingCol = false;
+			_isResizingRow = false;
+			if (_instance is not null)
+			{
+				try
+				{
+					await _instance.InvokeVoidAsync("clearResizeClasses");
+				}
+				catch
+				{
+				}
+			}
+
+			await InvokeAsync(StateHasChanged);
+		}
+
 		if (_isEditing)
 		{
 			try
@@ -444,64 +463,42 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	{
 	}
 
-	private async Task BeginColResize(int col, MouseEventArgs e)
-	{
-		if (e.Button != 0 || _dotNetRef is null)
-		{
-			return;
-		}
+	private bool _clearResizeClassAfterRender;
 
+	[JSInvokable]
+	public Task OnColumnResizeBegin(int columnIndex)
+	{
 		_isResizingCol = true;
 		_isSelecting = false;
 		Context.BeginColumnResizeGesture();
-		var startWidth = Context.GetColumnWidth(col);
-		await _instance.InvokeVoidAsync("startColumnResize", _dotNetRef, col, e.ClientX, startWidth);
-	}
-
-	private async Task BeginRowResize(int row, MouseEventArgs e)
-	{
-		if (e.Button != 0 || _dotNetRef is null)
-		{
-			return;
-		}
-
-		_isResizingRow = true;
-		_isSelecting = false;
-		Context.BeginRowResizeGesture();
-		var startHeight = Context.GetRowHeight(row);
-		await _instance.InvokeVoidAsync("startRowResize", _dotNetRef, row, e.ClientY, startHeight);
-	}
-
-	[JSInvokable]
-	public Task OnColumnResizeMove(int columnIndex, int width)
-	{
-		Context.SetColumnWidth(columnIndex, width, notify: false);
-		RecomputeVisibleRange();
-		return InvokeAsync(StateHasChanged);
+		return Task.CompletedTask;
 	}
 
 	[JSInvokable]
 	public Task OnColumnResizeEnd(int columnIndex, int width)
 	{
 		Context.SetColumnWidth(columnIndex, width, notify: false);
-		_isResizingCol = false;
+		_isResizingCol = true;
+		_clearResizeClassAfterRender = true;
 		RecomputeVisibleRange();
 		return InvokeAsync(StateHasChanged);
 	}
 
 	[JSInvokable]
-	public Task OnRowResizeMove(int rowIndex, int height)
+	public Task OnRowResizeBegin(int rowIndex)
 	{
-		Context.SetRowHeight(rowIndex, height);
-		RecomputeVisibleRange();
-		return InvokeAsync(StateHasChanged);
+		_isResizingRow = true;
+		_isSelecting = false;
+		Context.BeginRowResizeGesture();
+		return Task.CompletedTask;
 	}
 
 	[JSInvokable]
 	public Task OnRowResizeEnd(int rowIndex, int height)
 	{
-		Context.SetRowHeight(rowIndex, height);
-		_isResizingRow = false;
+		Context.SetRowHeight(rowIndex, height, notify: false);
+		_isResizingRow = true;
+		_clearResizeClassAfterRender = true;
 		RecomputeVisibleRange();
 		return InvokeAsync(StateHasChanged);
 	}

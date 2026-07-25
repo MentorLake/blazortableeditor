@@ -64,6 +64,7 @@
 								class="bte-col-header @(colSelected ? "is-selected" : null) @(colPressed ? "is-pressed" : null)"
 								role="button"
 								tabindex="-1"
+								data-col="@col"
 								style="@($"left:{left}px;width:{width}px;height:{SheetContext.ColumnHeaderHeight}px;")"
 								@onmousedown="e => OnColHeaderMouseDown(col, e)"
 								@onmouseup="OnHeaderMouseUp"
@@ -72,10 +73,7 @@
 								@oncontextmenu:preventDefault="true"
 								@oncontextmenu:stopPropagation="true">
 								<span class="bte-header-label">@Context.Model.ColumnHeaders[col]</span>
-								<div class="bte-resize-col"
-								     @onmousedown:preventDefault="true"
-								     @onmousedown:stopPropagation="true"
-								     @onmousedown="e => BeginColResize(col, e)"></div>
+								<div class="bte-resize-col"></div>
 							</div>
 						}
 					</div>
@@ -96,6 +94,7 @@
 								class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
 								role="button"
 								tabindex="-1"
+								data-row="@row"
 								style="@($"top:{top}px;height:{height}px;width:{SheetContext.RowHeaderWidth}px;line-height:{height}px;")"
 								@onmousedown="e => OnRowHeaderMouseDown(row, e)"
 								@onmouseup="OnHeaderMouseUp"
@@ -104,9 +103,7 @@
 								@oncontextmenu:preventDefault="true"
 								@oncontextmenu:stopPropagation="true">
 								<span class="bte-header-label">@Context.Model.RowHeaders[row]</span>
-								<div class="bte-resize-row"
-								     @onmousedown:stopPropagation="true"
-								     @onmousedown="e => BeginRowResize(row, e)"></div>
+								<div class="bte-resize-row"></div>
 							</div>
 						}
 					</div>
@@ -138,6 +135,8 @@
 								<div class="@css"
 								     style="@style"
 								     title="@title"
+								     data-row="@row"
+								     data-col="@col"
 								     @onmousedown="e => OnCellMouseDown(row, col, e)"
 								     @onmouseenter="() => OnCellMouseEnter(row, col)"
 								     @ondblclick="() => BeginEdit(row, col)"

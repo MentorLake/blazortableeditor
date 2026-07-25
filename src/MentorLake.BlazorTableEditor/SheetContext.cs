@@ -232,10 +232,13 @@ public class SheetContext
 	public int GetColumnWidth(int col) =>
 		ColumnWidths.TryGetValue(col, out var w) ? w : DefaultColumnWidth;
 
-	public void SetRowHeight(int row, int height)
+	public void SetRowHeight(int row, int height, bool notify = true)
 	{
 		RowHeights[row] = Math.Max(18, height);
-		NotifyStateChanged();
+		if (notify)
+		{
+			NotifyStateChanged();
+		}
 	}
 
 	public void SetColumnWidth(int col, int width, bool notify = true)

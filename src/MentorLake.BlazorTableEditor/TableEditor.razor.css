@@ -128,7 +128,7 @@
 	overflow: hidden;
 	user-select: none;
 	cursor: pointer;
-	transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
+	transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .bte-col-header:hover {
@@ -189,7 +189,7 @@
 	overflow: hidden;
 	user-select: none;
 	cursor: pointer;
-	transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease, transform 0.08s ease;
+	transition: background 0.12s ease, color 0.12s ease, box-shadow 0.12s ease;
 }
 
 .bte-row-header:hover {
@@ -461,6 +461,28 @@
 .bte-root.is-col-resizing,
 .bte-root.is-col-resizing * {
 	cursor: col-resize !important;
+}
+
+.bte-root.is-row-resizing,
+.bte-root.is-row-resizing * {
+	cursor: row-resize !important;
+}
+
+.bte-root.is-col-resizing .bte-col-header,
+.bte-root.is-col-resizing .bte-row-header,
+.bte-root.is-col-resizing .bte-cell,
+.bte-root.is-row-resizing .bte-col-header,
+.bte-root.is-row-resizing .bte-row-header,
+.bte-root.is-row-resizing .bte-cell,
+.bte-root.is-col-resizing .bte-selection,
+.bte-root.is-col-resizing .bte-fill-preview,
+.bte-root.is-col-resizing .bte-clipboard-source,
+.bte-root.is-col-resizing .bte-editor,
+.bte-root.is-row-resizing .bte-selection,
+.bte-root.is-row-resizing .bte-fill-preview,
+.bte-root.is-row-resizing .bte-clipboard-source,
+.bte-root.is-row-resizing .bte-editor {
+	transition: none !important;
 }
 
 .bte-context-backdrop {
