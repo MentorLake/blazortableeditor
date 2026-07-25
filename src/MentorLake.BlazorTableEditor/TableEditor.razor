@@ -10,6 +10,8 @@
      @oncontextmenu:preventDefault="true">
 
 	<div class="bte-toolbar">
+		<button type="button" @onclick="UndoAsync" disabled="@(!Context.CanUndo)">Undo</button>
+		<button type="button" @onclick="RedoAsync" disabled="@(!Context.CanRedo)">Redo</button>
 		<button type="button" @onclick="CopyAsync">Copy</button>
 		<button type="button" @onclick="CutAsync">Cut</button>
 		<button type="button" @onclick="PasteAsync">Paste</button>
@@ -193,6 +195,9 @@
 		<div class="bte-context-menu"
 		     style="@($"left:{_contextMenuX}px;top:{_contextMenuY}px;")"
 		     @onmousedown:stopPropagation="true">
+			<button type="button" class="bte-context-item" @onclick="ContextUndo" disabled="@(!Context.CanUndo)">Undo</button>
+			<button type="button" class="bte-context-item" @onclick="ContextRedo" disabled="@(!Context.CanRedo)">Redo</button>
+			<div class="bte-context-separator"></div>
 			<button type="button" class="bte-context-item" @onclick="ContextInsertColLeft">Insert column left</button>
 			<button type="button" class="bte-context-item" @onclick="ContextInsertColRight">Insert column right</button>
 			<button type="button" class="bte-context-item" @onclick="ContextDeleteColumn"

@@ -441,6 +441,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 		_isResizingCol = true;
 		_isSelecting = false;
+		Context.BeginColumnResizeGesture();
 		var startWidth = Context.GetColumnWidth(col);
 		await _instance.InvokeVoidAsync("startColumnResize", _dotNetRef, col, e.ClientX, startWidth);
 	}
@@ -454,6 +455,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 		_isResizingRow = true;
 		_isSelecting = false;
+		Context.BeginRowResizeGesture();
 		var startHeight = Context.GetRowHeight(row);
 		await _instance.InvokeVoidAsync("startRowResize", _dotNetRef, row, e.ClientY, startHeight);
 	}
@@ -653,6 +655,15 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 				case "v":
 					_ = PasteAsync();
 					return;
+				case "z":
+					if (e.ShiftKey)
+						Redo();
+					else
+						Undo();
+					return;
+				case "y":
+					Redo();
+					return;
 			}
 		}
 
@@ -804,6 +815,44 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 		Context.DeleteRow(_contextRow);
 		CloseContextMenu();
 		RecomputeVisibleRange();
+	}
+
+	private void ContextUndo()
+	{
+		Context.Undo();
+		CloseContextMenu();
+		RecomputeVisibleRange();
+	}
+
+	private void ContextRedo()
+	{
+		Context.Redo();
+		CloseContextMenu();
+		RecomputeVisibleRange();
+	}
+
+	private void Undo()
+	{
+		Context.Undo();
+		RecomputeVisibleRange();
+	}
+
+	private void Redo()
+	{
+		Context.Redo();
+		RecomputeVisibleRange();
+	}
+
+	private async Task UndoAsync()
+	{
+		Undo();
+		await FocusRootAsync();
+	}
+
+	private async Task RedoAsync()
+	{
+		Redo();
+		await FocusRootAsync();
 	}
 
 	private async Task ContextCutAsync()

@@ -38,6 +38,11 @@
 	border-color: #8ab4f8;
 }
 
+.bte-toolbar button:disabled {
+	opacity: 0.5;
+	cursor: default;
+}
+
 .bte-status {
 	margin-left: auto;
 	color: #555;

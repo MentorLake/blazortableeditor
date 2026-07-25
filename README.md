@@ -1,6 +1,6 @@
 # BlazorTableEditor
 
-A high-performance, Excel-like table editor component library for Blazor.
+An AI-generated high-performance, Excel-like table editor component library for Blazor.
 
 ## Features
 
