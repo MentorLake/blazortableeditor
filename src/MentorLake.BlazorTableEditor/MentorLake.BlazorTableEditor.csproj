@@ -30,11 +30,4 @@
 		<None Include="..\..\README.md" Pack="true" PackagePath="\"/>
 	</ItemGroup>
 
-	<ItemGroup>
-	  <Content Update="TableEditor.razor.js">
-	    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-	    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-	  </Content>
-	</ItemGroup>
-
 </Project>

@@ -331,7 +331,7 @@ public class SheetContext
 		NotifyStateChanged();
 	}
 
-	public void SetActiveCell(int row, int col, bool extendSelection = false)
+	public void SetActiveCell(int row, int col, bool extendSelection = false, bool notify = true)
 	{
 		if (Model.RowCount == 0 || Model.ColumnCount == 0)
 		{
@@ -357,10 +357,13 @@ public class SheetContext
 			CurrentSelection = new CellRegion(row, col, row, col);
 		}
 
-		NotifyStateChanged();
+		if (notify)
+		{
+			NotifyStateChanged();
+		}
 	}
 
-	public void UpdateSelectionTo(int row, int col)
+	public void UpdateSelectionTo(int row, int col, bool notify = true)
 	{
 		if (Model.RowCount == 0 || Model.ColumnCount == 0)
 		{
@@ -376,7 +379,10 @@ public class SheetContext
 			row,
 			col).Normalize();
 
-		NotifyStateChanged();
+		if (notify)
+		{
+			NotifyStateChanged();
+		}
 	}
 
 	public void UpdateSelection(CellRegion region)
@@ -738,15 +744,18 @@ public class SheetContext
 		return pasted;
 	}
 
-	public void StartDragFill()
+	public void StartDragFill(bool notify = true)
 	{
 		_dragFillSource = (CurrentSelection ?? new CellRegion(ActiveCell.Row, ActiveCell.Col, ActiveCell.Row, ActiveCell.Col)).Normalize();
 		_isDragFilling = true;
 		_dragFillPreview = _dragFillSource;
-		NotifyStateChanged();
+		if (notify)
+		{
+			NotifyStateChanged();
+		}
 	}
 
-	public void UpdateDragFillPreview(int row, int col)
+	public void UpdateDragFillPreview(int row, int col, bool notify = true)
 	{
 		if (!_isDragFilling)
 		{
@@ -781,8 +790,13 @@ public class SheetContext
 		}
 
 		_dragFillPreview = new CellRegion(startRow, startCol, endRow, endCol).Normalize();
-		NotifyStateChanged();
+		if (notify)
+		{
+			NotifyStateChanged();
+		}
 	}
+
+	public CellRegion GetDragFillSource() => _dragFillSource;
 
 	public void EndDragFill()
 	{

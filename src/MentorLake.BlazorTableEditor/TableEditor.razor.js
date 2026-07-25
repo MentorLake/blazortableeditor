@@ -69,6 +69,25 @@ export function createInstance() {
 					if (!Number.isFinite(row)) return;
 					const startHeight = stylePx(header, "height") || 28;
 					self._beginRowResize(row, e.clientY, startHeight);
+					return;
+				}
+
+				const fillHandle = e.target.closest && e.target.closest(".bte-fill-handle");
+				if (fillHandle) {
+					e.preventDefault();
+					e.stopPropagation();
+					self._beginFillDrag();
+					return;
+				}
+
+				const cell = e.target.closest && e.target.closest(".bte-cell");
+				if (cell && self._viewport.contains(cell)) {
+					const row = parseInt(cell.getAttribute("data-row"), 10);
+					const col = parseInt(cell.getAttribute("data-col"), 10);
+					if (!Number.isFinite(row) || !Number.isFinite(col)) return;
+					e.preventDefault();
+					e.stopPropagation();
+					self._beginSelectionDrag(row, col, !!e.shiftKey);
 				}
 			};
 
@@ -111,6 +130,8 @@ export function createInstance() {
 				this._rafNotify = 0;
 			}
 			this._stopResize();
+			this._stopSelectionDrag(false);
+			this._stopFillDrag(false);
 			this._viewport = null;
 			this._dotNetRef = null;
 			this._onScroll = null;
@@ -437,6 +458,332 @@ export function createInstance() {
 		_stopResize: function () {
 			this._detachResizeListeners();
 			this.clearResizeClasses();
+		},
+
+		_getCellTrack: function () {
+			const canvas = this._viewport ? this._viewport.querySelector(".bte-canvas") : null;
+			return canvas ? canvas.querySelector(".bte-cell-track") : null;
+		},
+
+		_cellAtPoint: function (clientX, clientY) {
+			const prev = this._selectionOverlay;
+			const prevPe = prev ? prev.style.pointerEvents : null;
+			const fillPrev = this._fillPreviewEl;
+			const fillPe = fillPrev ? fillPrev.style.pointerEvents : null;
+			if (prev) prev.style.pointerEvents = "none";
+			if (fillPrev) fillPrev.style.pointerEvents = "none";
+
+			const el = document.elementFromPoint(clientX, clientY);
+			if (prev) prev.style.pointerEvents = prevPe || "";
+			if (fillPrev) fillPrev.style.pointerEvents = fillPe || "";
+
+			const cell = el && el.closest ? el.closest(".bte-cell") : null;
+			if (!cell || !this._viewport || !this._viewport.contains(cell)) return null;
+			const row = parseInt(cell.getAttribute("data-row"), 10);
+			const col = parseInt(cell.getAttribute("data-col"), 10);
+			if (!Number.isFinite(row) || !Number.isFinite(col)) return null;
+			return {el: cell, row, col};
+		},
+
+		_ensureSelectionOverlay: function (cellTrack) {
+			let sel = cellTrack.querySelector(":scope > .bte-selection");
+			if (!sel) {
+				sel = document.createElement("div");
+				sel.className = "bte-selection";
+				const handle = document.createElement("div");
+				handle.className = "bte-fill-handle";
+				sel.appendChild(handle);
+				cellTrack.appendChild(sel);
+			}
+			this._selectionOverlay = sel;
+			return sel;
+		},
+
+		_ensureFillPreview: function (cellTrack) {
+			let el = cellTrack.querySelector(":scope > .bte-fill-preview");
+			if (!el) {
+				el = document.createElement("div");
+				el.className = "bte-fill-preview";
+				cellTrack.appendChild(el);
+			}
+			this._fillPreviewEl = el;
+			return el;
+		},
+
+		_regionBoxFromCells: function (cellTrack, minR, maxR, minC, maxC) {
+			const cells = cellTrack.querySelectorAll(".bte-cell");
+			let left = Infinity;
+			let top = Infinity;
+			let right = -Infinity;
+			let bottom = -Infinity;
+			let found = false;
+
+			for (let i = 0; i < cells.length; i++) {
+				const cell = cells[i];
+				const r = parseInt(cell.getAttribute("data-row"), 10);
+				const c = parseInt(cell.getAttribute("data-col"), 10);
+				if (r < minR || r > maxR || c < minC || c > maxC) continue;
+				found = true;
+				const L = stylePx(cell, "left");
+				const T = stylePx(cell, "top");
+				const W = stylePx(cell, "width");
+				const H = stylePx(cell, "height");
+				if (L < left) left = L;
+				if (T < top) top = T;
+				if (L + W > right) right = L + W;
+				if (T + H > bottom) bottom = T + H;
+			}
+
+			if (!found) return null;
+			return {left, top, width: right - left, height: bottom - top};
+		},
+
+		_applySelectionVisual: function () {
+			const cellTrack = this._getCellTrack();
+			if (!cellTrack) return;
+
+			const minR = Math.min(this._selAnchorRow, this._selEndRow);
+			const maxR = Math.max(this._selAnchorRow, this._selEndRow);
+			const minC = Math.min(this._selAnchorCol, this._selEndCol);
+			const maxC = Math.max(this._selAnchorCol, this._selEndCol);
+			const activeR = this._selAnchorRow;
+			const activeC = this._selAnchorCol;
+
+			const cells = cellTrack.querySelectorAll(".bte-cell");
+			for (let i = 0; i < cells.length; i++) {
+				const cell = cells[i];
+				const r = parseInt(cell.getAttribute("data-row"), 10);
+				const c = parseInt(cell.getAttribute("data-col"), 10);
+				const selected = r >= minR && r <= maxR && c >= minC && c <= maxC;
+				cell.classList.toggle("is-selected", selected);
+				cell.classList.toggle("is-active", r === activeR && c === activeC);
+				cell.classList.remove("is-fill");
+			}
+
+			const box = this._regionBoxFromCells(cellTrack, minR, maxR, minC, maxC);
+			const sel = this._ensureSelectionOverlay(cellTrack);
+			if (box) {
+				sel.style.left = box.left + "px";
+				sel.style.top = box.top + "px";
+				sel.style.width = box.width + "px";
+				sel.style.height = box.height + "px";
+				sel.style.display = "";
+			}
+
+			if (this._fillPreviewEl) {
+				this._fillPreviewEl.style.display = "none";
+			}
+		},
+
+		_applyFillVisual: function () {
+			const cellTrack = this._getCellTrack();
+			if (!cellTrack || !this._fillSource) return;
+
+			const src = this._fillSource;
+			const minR = Math.min(src.minR, this._fillEndRow);
+			const maxR = Math.max(src.maxR, this._fillEndRow);
+			const minC = Math.min(src.minC, this._fillEndCol);
+			const maxC = Math.max(src.maxC, this._fillEndCol);
+
+			const cells = cellTrack.querySelectorAll(".bte-cell");
+			for (let i = 0; i < cells.length; i++) {
+				const cell = cells[i];
+				const r = parseInt(cell.getAttribute("data-row"), 10);
+				const c = parseInt(cell.getAttribute("data-col"), 10);
+				const inSource = r >= src.minR && r <= src.maxR && c >= src.minC && c <= src.maxC;
+				const inPreview = r >= minR && r <= maxR && c >= minC && c <= maxC;
+				cell.classList.toggle("is-fill", inPreview && !inSource);
+			}
+
+			const box = this._regionBoxFromCells(cellTrack, minR, maxR, minC, maxC);
+			const preview = this._ensureFillPreview(cellTrack);
+			if (box) {
+				preview.style.left = box.left + "px";
+				preview.style.top = box.top + "px";
+				preview.style.width = box.width + "px";
+				preview.style.height = box.height + "px";
+				preview.style.display = "";
+			}
+		},
+
+		_beginSelectionDrag: function (row, col, shiftKey) {
+			this._stopSelectionDrag(false);
+			this._stopFillDrag(false);
+			this._stopResize();
+
+			this._selecting = true;
+			const root = this._getRoot();
+			if (shiftKey && root) {
+				const ar = parseInt(root.getAttribute("data-anchor-row"), 10);
+				const ac = parseInt(root.getAttribute("data-anchor-col"), 10);
+				this._selAnchorRow = Number.isFinite(ar) ? ar : row;
+				this._selAnchorCol = Number.isFinite(ac) ? ac : col;
+			} else {
+				this._selAnchorRow = row;
+				this._selAnchorCol = col;
+			}
+			this._selEndRow = row;
+			this._selEndCol = col;
+			this._applySelectionVisual();
+
+			if (this._dotNetRef) {
+				this._dotNetRef.invokeMethodAsync("OnSelectionDragBegin", row, col, !!shiftKey).catch(() => {});
+			}
+
+			const onMove = (e) => {
+				e.preventDefault();
+				this._selClientX = e.clientX;
+				this._selClientY = e.clientY;
+				if (!this._selRaf) {
+					this._selRaf = requestAnimationFrame(() => {
+						this._selRaf = 0;
+						const hit = this._cellAtPoint(this._selClientX, this._selClientY);
+						if (!hit) return;
+						if (hit.row === this._selEndRow && hit.col === this._selEndCol) return;
+						this._selEndRow = hit.row;
+						this._selEndCol = hit.col;
+						this._applySelectionVisual();
+					});
+				}
+			};
+
+			const onUp = (e) => {
+				e.preventDefault();
+				const hit = this._cellAtPoint(e.clientX, e.clientY);
+				if (hit) {
+					this._selEndRow = hit.row;
+					this._selEndCol = hit.col;
+					this._applySelectionVisual();
+				}
+				this._stopSelectionDrag(true);
+			};
+
+			this._selMove = onMove;
+			this._selUp = onUp;
+			document.addEventListener("mousemove", onMove, {passive: false});
+			document.addEventListener("mouseup", onUp, {passive: false});
+		},
+
+		_stopSelectionDrag: function (commit) {
+			if (this._selRaf) {
+				cancelAnimationFrame(this._selRaf);
+				this._selRaf = 0;
+			}
+			if (this._selMove) {
+				document.removeEventListener("mousemove", this._selMove);
+				this._selMove = null;
+			}
+			if (this._selUp) {
+				document.removeEventListener("mouseup", this._selUp);
+				this._selUp = null;
+			}
+
+			if (!this._selecting) return;
+			this._selecting = false;
+
+			if (commit && this._dotNetRef) {
+				this._dotNetRef.invokeMethodAsync(
+					"OnSelectionDragEnd",
+					this._selEndRow,
+					this._selEndCol
+				).catch(() => {});
+			}
+		},
+
+		_beginFillDrag: function () {
+			this._stopSelectionDrag(false);
+			this._stopFillDrag(false);
+			this._stopResize();
+
+			const cellTrack = this._getCellTrack();
+			if (!cellTrack) return;
+
+			const root = this._getRoot();
+			let minR = parseInt(root && root.getAttribute("data-sel-r0"), 10);
+			let maxR = parseInt(root && root.getAttribute("data-sel-r1"), 10);
+			let minC = parseInt(root && root.getAttribute("data-sel-c0"), 10);
+			let maxC = parseInt(root && root.getAttribute("data-sel-c1"), 10);
+
+			if (![minR, maxR, minC, maxC].every(Number.isFinite)) {
+				const active = cellTrack.querySelector(".bte-cell.is-active");
+				if (!active) return;
+				minR = maxR = parseInt(active.getAttribute("data-row"), 10);
+				minC = maxC = parseInt(active.getAttribute("data-col"), 10);
+			}
+
+			this._filling = true;
+			this._fillSource = {minR, maxR, minC, maxC};
+			this._fillEndRow = maxR;
+			this._fillEndCol = maxC;
+			this._applyFillVisual();
+
+			if (this._dotNetRef) {
+				this._dotNetRef.invokeMethodAsync("OnFillDragBegin").catch(() => {});
+			}
+
+			const onMove = (e) => {
+				e.preventDefault();
+				this._fillClientX = e.clientX;
+				this._fillClientY = e.clientY;
+				if (!this._fillRaf) {
+					this._fillRaf = requestAnimationFrame(() => {
+						this._fillRaf = 0;
+						const hit = this._cellAtPoint(this._fillClientX, this._fillClientY);
+						if (!hit) return;
+						if (hit.row === this._fillEndRow && hit.col === this._fillEndCol) return;
+						this._fillEndRow = hit.row;
+						this._fillEndCol = hit.col;
+						this._applyFillVisual();
+					});
+				}
+			};
+
+			const onUp = (e) => {
+				e.preventDefault();
+				const hit = this._cellAtPoint(e.clientX, e.clientY);
+				if (hit) {
+					this._fillEndRow = hit.row;
+					this._fillEndCol = hit.col;
+					this._applyFillVisual();
+				}
+				this._stopFillDrag(true);
+			};
+
+			this._fillMove = onMove;
+			this._fillUp = onUp;
+			document.addEventListener("mousemove", onMove, {passive: false});
+			document.addEventListener("mouseup", onUp, {passive: false});
+		},
+
+		_stopFillDrag: function (commit) {
+			if (this._fillRaf) {
+				cancelAnimationFrame(this._fillRaf);
+				this._fillRaf = 0;
+			}
+			if (this._fillMove) {
+				document.removeEventListener("mousemove", this._fillMove);
+				this._fillMove = null;
+			}
+			if (this._fillUp) {
+				document.removeEventListener("mouseup", this._fillUp);
+				this._fillUp = null;
+			}
+
+			if (!this._filling) return;
+			this._filling = false;
+
+			if (commit && this._dotNetRef) {
+				this._dotNetRef.invokeMethodAsync(
+					"OnFillDragEnd",
+					this._fillEndRow,
+					this._fillEndCol
+				).catch(() => {});
+			}
+
+			this._fillSource = null;
+			if (this._fillPreviewEl) {
+				this._fillPreviewEl.style.display = "none";
+			}
 		},
 
 		writeText: async function (text) {

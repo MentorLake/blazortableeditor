@@ -1,8 +1,16 @@
 @using MentorLake.BlazorTableEditor.Models
 
-<div class="bte-root @(_isResizingCol ? "is-col-resizing" : null)"
+<div class="bte-root @(_isResizingCol ? "is-col-resizing" : null) @(_isResizingRow ? "is-row-resizing" : null)"
      tabindex="0"
      @ref="_rootRef"
+     data-anchor-row="@Context.SelectionAnchor.Row"
+     data-anchor-col="@Context.SelectionAnchor.Col"
+     data-active-row="@Context.ActiveCell.Row"
+     data-active-col="@Context.ActiveCell.Col"
+     data-sel-r0="@(Context.CurrentSelection?.Normalize().StartRow ?? Context.ActiveCell.Row)"
+     data-sel-r1="@(Context.CurrentSelection?.Normalize().EndRow ?? Context.ActiveCell.Row)"
+     data-sel-c0="@(Context.CurrentSelection?.Normalize().StartCol ?? Context.ActiveCell.Col)"
+     data-sel-c1="@(Context.CurrentSelection?.Normalize().EndCol ?? Context.ActiveCell.Col)"
      @onkeydown="OnKeyDown"
      @onmouseup="OnGlobalMouseUp"
      @onmouseleave="OnRootMouseLeave"

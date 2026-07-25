@@ -388,7 +388,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 	private void OnCellMouseDown(int row, int col, MouseEventArgs e)
 	{
-		if (e.Button != 0)
+		if (_jsReady || e.Button != 0)
 		{
 			return;
 		}
@@ -405,6 +405,11 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 	private void OnCellMouseEnter(int row, int col)
 	{
+		if (_jsReady)
+		{
+			return;
+		}
+
 		if (Context.IsDragFilling)
 		{
 			Context.UpdateDragFillPreview(row, col);
@@ -419,7 +424,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 	private void OnRootMouseLeave(MouseEventArgs e)
 	{
-		if (_isResizingCol || _isResizingRow)
+		if (_isResizingCol || _isResizingRow || _jsReady)
 		{
 			return;
 		}
@@ -446,6 +451,16 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 			return;
 		}
 
+		if (_jsReady)
+		{
+			if (hadPressedHeader)
+			{
+				StateHasChanged();
+			}
+
+			return;
+		}
+
 		if (Context.IsDragFilling)
 		{
 			Context.EndDragFill();
@@ -457,6 +472,49 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 		{
 			StateHasChanged();
 		}
+	}
+
+	[JSInvokable]
+	public Task OnSelectionDragBegin(int row, int col, bool shiftKey)
+	{
+		if (_isEditing)
+		{
+			CommitEdit();
+		}
+
+		_isSelecting = true;
+		Context.SetActiveCell(row, col, shiftKey, notify: false);
+		_ = FocusRootAsync();
+		return Task.CompletedTask;
+	}
+
+	[JSInvokable]
+	public Task OnSelectionDragEnd(int row, int col)
+	{
+		_isSelecting = false;
+		Context.UpdateSelectionTo(row, col, notify: true);
+		_ = FocusRootAsync();
+		return Task.CompletedTask;
+	}
+
+	[JSInvokable]
+	public Task OnFillDragBegin()
+	{
+		Context.StartDragFill(notify: false);
+		return Task.CompletedTask;
+	}
+
+	[JSInvokable]
+	public Task OnFillDragEnd(int row, int col)
+	{
+		if (!Context.IsDragFilling)
+		{
+			Context.StartDragFill(notify: false);
+		}
+
+		Context.UpdateDragFillPreview(row, col, notify: false);
+		Context.EndDragFill();
+		return Task.CompletedTask;
 	}
 
 	private void OnCanvasMouseMove(MouseEventArgs e)
@@ -555,7 +613,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 	private void OnFillHandleMouseDown(MouseEventArgs e)
 	{
-		if (e.Button != 0)
+		if (_jsReady || e.Button != 0)
 		{
 			return;
 		}
