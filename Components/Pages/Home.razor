@@ -1,0 +1,15 @@
+@page "/"
+@rendermode InteractiveServer
+@using BlazorTableEditor.Models
+
+<PageTitle>Blazor Table Editor</PageTitle>
+
+<div class="bte-page">
+    <h1>Blazor Table Editor</h1>
+    <p class="bte-lead">
+        Click a cell to select. Drag to multi-select. Double-click or press Enter/F2 to edit.
+        Arrow keys move the active cell; Shift+Arrow expands selection. Drag the fill handle to copy values.
+    </p>
+
+    <BlazorGridEditor />
+</div>
