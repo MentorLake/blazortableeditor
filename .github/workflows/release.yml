@@ -5,14 +5,12 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-
 jobs:
   build:
 
     permissions:
       id-token: write
+      contents: write
 
     runs-on: ubuntu-latest
     outputs:
