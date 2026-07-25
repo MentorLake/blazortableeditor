@@ -1,0 +1,4 @@
+<Solution>
+	<Project Path="src/MentorLake.BlazorTableEditor.Demo/MentorLake.BlazorTableEditor.Demo.csproj" />
+	<Project Path="src/MentorLake.BlazorTableEditor/MentorLake.BlazorTableEditor.csproj" />
+</Solution>

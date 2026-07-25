@@ -16,24 +16,24 @@ A high-performance, Excel-like table editor component library for Blazor.
 ## Installation
 
 ```bash
-dotnet add package BlazorTableEditor
+dotnet add package MentorLake.BlazorTableEditor
 ```
 
 ## Usage
 
 ```razor
-@using BlazorTableEditor
+@using MentorLake.BlazorTableEditor
 
-<BlazorGridEditor Model="myModel" />
+<TableEditor Model="myModel" />
 ```
 
 ### Basic setup in a page/component
 
 ```razor
 @page "/editor"
-@using BlazorTableEditor.Models
+@using MentorLake.BlazorTableEditor.Models
 
-<BlazorGridEditor Model="@model" ModelChanged="OnModelChanged" />
+<TableEditor Model="@model" ModelChanged="OnModelChanged" />
 
 @code {
     private TableDataModel model = new TableDataModel(50, 10);
@@ -49,16 +49,6 @@ dotnet add package BlazorTableEditor
     }
 }
 ```
-
-### JavaScript (required)
-
-The component requires its JS file. Reference it in your app (usually in `App.razor` or `_Layout.cshtml`):
-
-```html
-<script src="_content/BlazorTableEditor/js/blazorGridEditor.js"></script>
-```
-
-CSS is automatically included via the library's static assets.
 
 ## CSV
 

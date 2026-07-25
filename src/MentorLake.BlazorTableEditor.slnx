@@ -1,8 +1,0 @@
-<Solution>
-	<Folder Name="/Solution Files/">
-		<File Path="../.gitignore"/>
-		<File Path="../.editorconfig"/>
-	</Folder>
-	<Project Path="MentorLake.BlazorTableEditor.Demo/MentorLake.BlazorTableEditor.Demo.csproj" />
-	<Project Path="MentorLake.BlazorTableEditor/MentorLake.BlazorTableEditor.csproj" />
-</Solution>
