@@ -11,6 +11,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 {
 	[Parameter] public TableDataModel? Model { get; set; }
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
+	[Parameter] public ITableValidator? Validator { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;
 	private ElementReference _rootRef;
@@ -59,18 +60,27 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	protected override void OnInitialized()
 	{
 		Context = new SheetContext(Model, addSampleIfEmpty: true);
+		Context.SetValidator(Validator);
 		WireContext(Context);
 		RecomputeVisibleRange();
 	}
 
 	protected override void OnParametersSet()
 	{
-		if (Model is not null && !ReferenceEquals(Context.Model, Model))
+		bool modelChanged = Model is not null && !ReferenceEquals(Context.Model, Model);
+		bool validatorChanged = !ReferenceEquals(Context.Validator, Validator);
+
+		if (modelChanged)
 		{
 			UnwireContext(Context);
 			Context = new SheetContext(Model, addSampleIfEmpty: false);
+			Context.SetValidator(Validator);
 			WireContext(Context);
 			RecomputeVisibleRange();
+		}
+		else if (validatorChanged)
+		{
+			Context.SetValidator(Validator);
 		}
 	}
 
@@ -162,7 +172,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 		StateHasChanged();
 	});
 
-	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode)
+	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode, bool hasError = false)
 	{
 		var css = "bte-cell";
 		if (isActive) css += " is-active";
@@ -170,6 +180,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 		if (inFill) css += " is-fill";
 		if (inClipboard && mode == ClipboardVisualMode.Copy) css += " is-copied";
 		if (inClipboard && mode == ClipboardVisualMode.Cut) css += " is-cut";
+		if (hasError) css += " is-error";
 		return css;
 	}
 
@@ -987,6 +998,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 			UnwireContext(Context);
 			Context = new SheetContext(model, addSampleIfEmpty: false);
+			Context.SetValidator(Validator);
 			WireContext(Context);
 			_clipboardSource = null;
 			_clipboardMode = ClipboardVisualMode.None;

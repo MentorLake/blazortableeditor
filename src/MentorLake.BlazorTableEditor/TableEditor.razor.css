@@ -295,6 +295,24 @@
 	background-image: linear-gradient(rgba(26, 115, 232, 0.16), rgba(26, 115, 232, 0.16));
 }
 
+.bte-cell.is-error {
+	background: #fff5f5;
+	border-right-color: #d93025;
+	border-bottom-color: #d93025;
+	outline: 1px solid #d93025;
+	outline-offset: -1px;
+}
+
+.bte-cell.is-error.is-selected {
+	background: #fce8e6;
+}
+
+.bte-cell.is-error.is-active {
+	background: #fff;
+	outline: 2px solid #d93025;
+	outline-offset: -2px;
+}
+
 .bte-selection {
 	position: absolute;
 	box-sizing: border-box;

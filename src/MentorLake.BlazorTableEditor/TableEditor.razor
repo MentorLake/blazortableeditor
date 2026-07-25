@@ -1,4 +1,4 @@
-@using BlazorTableEditor.Models
+@using MentorLake.BlazorTableEditor.Models
 
 <div class="bte-root @(_isResizingCol ? "is-col-resizing" : null)"
      tabindex="0"
@@ -126,12 +126,15 @@
 								var inFill = Context.DragFillPreview?.Contains(new CellPosition(row, col)) == true
 								             && !Context.IsSelected(row, col);
 								var inClipboard = IsInClipboardSource(row, col);
+								var hasError = Context.HasError(row, col);
 								var cell = Context.GetValue(row, col);
-								var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, _clipboardMode);
+								var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, _clipboardMode, hasError);
 								var style = BuildCellStyle(left, top, width, height, cell);
+								var title = hasError ? Context.GetError(row, col) : null;
 
 								<div class="@css"
 								     style="@style"
+								     title="@title"
 								     @onmousedown="e => OnCellMouseDown(row, col, e)"
 								     @onmouseenter="() => OnCellMouseEnter(row, col)"
 								     @ondblclick="() => BeginEdit(row, col)"

@@ -1,5 +1,7 @@
 @page "/"
 @rendermode InteractiveServer
+@using MentorLake.BlazorTableEditor.Demo.Validators
+@using MentorLake.BlazorTableEditor.Models
 
 <PageTitle>Blazor Table Editor</PageTitle>
 
@@ -11,5 +13,9 @@
 		Use <strong>Export CSV</strong> / <strong>Import CSV</strong> in the toolbar to save or load spreadsheet data.
 	</p>
 
-	<MentorLake.BlazorTableEditor.TableEditor/>
+	<MentorLake.BlazorTableEditor.TableEditor Validator="_validator"/>
 </div>
+
+@code {
+	private readonly ITableValidator _validator = new DemoTableValidator();
+}
