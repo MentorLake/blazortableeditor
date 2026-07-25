@@ -178,5 +178,32 @@ window.bteGrid = {
       }
     } catch (_) {}
     return null;
+  },
+
+  downloadText: function (filename, text, mimeType) {
+    const blob = new Blob([text ?? ""], {
+      type: mimeType || "text/plain;charset=utf-8"
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "download.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  clickElement: function (id) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.click();
+    }
+  },
+
+  setScroll: function (viewport, left, top) {
+    if (!viewport) return;
+    viewport.scrollLeft = left || 0;
+    viewport.scrollTop = top || 0;
   }
 };

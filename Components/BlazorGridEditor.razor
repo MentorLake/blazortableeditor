@@ -1,4 +1,5 @@
 @using BlazorTableEditor.Models
+@using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.AspNetCore.Components.Web
 @implements IDisposable
 @inject IJSRuntime JS
@@ -21,6 +22,9 @@
         <button type="button" @onclick="InsertColAtActive">Insert Col</button>
         <button type="button" @onclick="DeleteColAtActive">Delete Col</button>
         <button type="button" @onclick="SaveJson">Save JSON</button>
+        <button type="button" @onclick="ExportCsvAsync">Export CSV</button>
+        <button type="button" class="bte-file-btn" @onclick="TriggerCsvImport">Import CSV</button>
+        <InputFile @ref="_csvInput" id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelected" accept=".csv,text/csv" />
         <button type="button" @onclick="LoadSample">Reload Sample</button>
         <span class="bte-status">
             @Context.Model.RowCount × @Context.Model.ColumnCount
@@ -28,6 +32,10 @@
             @if (Context.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))
             {
                 <text> | Sel @sel.Height×@sel.Width</text>
+            }
+            @if (!string.IsNullOrEmpty(_csvStatus))
+            {
+                <text> | @_csvStatus</text>
             }
         </span>
     </div>
@@ -50,13 +58,19 @@
                             var col = c;
                             var left = Context.GetColumnLeft(col);
                             var width = Context.GetColumnWidth(col);
-                            <div class="bte-col-header"
+                            var colSelected = Context.IsColumnHeaderSelected(col);
+                            var colPressed = _pressedColHeader == col;
+                            <div class="bte-col-header @(colSelected ? "is-selected" : null) @(colPressed ? "is-pressed" : null)"
+                                 role="button"
+                                 tabindex="-1"
                                  style="@($"left:{left}px;width:{width}px;height:{SheetContext.ColumnHeaderHeight}px;")"
                                  @onmousedown="e => OnColHeaderMouseDown(col, e)"
+                                 @onmouseup="OnHeaderMouseUp"
+                                 @onmouseleave="OnHeaderMouseUp"
                                  @oncontextmenu="e => OpenContextMenu(e, 0, col)"
                                  @oncontextmenu:preventDefault="true"
                                  @oncontextmenu:stopPropagation="true">
-                                @Context.Model.ColumnHeaders[col]
+                                <span class="bte-header-label">@Context.Model.ColumnHeaders[col]</span>
                                 <div class="bte-resize-col"
                                      @onmousedown:preventDefault="true"
                                      @onmousedown:stopPropagation="true"
@@ -75,13 +89,19 @@
                             var row = r;
                             var top = Context.GetRowTop(row);
                             var height = Context.GetRowHeight(row);
-                            <div class="bte-row-header"
+                            var rowSelected = Context.IsRowHeaderSelected(row);
+                            var rowPressed = _pressedRowHeader == row;
+                            <div class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
+                                 role="button"
+                                 tabindex="-1"
                                  style="@($"top:{top}px;height:{height}px;width:{SheetContext.RowHeaderWidth}px;line-height:{height}px;")"
                                  @onmousedown="e => OnRowHeaderMouseDown(row, e)"
+                                 @onmouseup="OnHeaderMouseUp"
+                                 @onmouseleave="OnHeaderMouseUp"
                                  @oncontextmenu="e => OpenContextMenu(e, row, 0)"
                                  @oncontextmenu:preventDefault="true"
                                  @oncontextmenu:stopPropagation="true">
-                                @Context.Model.RowHeaders[row]
+                                <span class="bte-header-label">@Context.Model.RowHeaders[row]</span>
                                 <div class="bte-resize-row"
                                      @onmousedown:stopPropagation="true"
                                      @onmousedown="e => BeginRowResize(row, e)"></div>
@@ -215,6 +235,8 @@
     private bool _isSelecting;
     private bool _isResizingCol;
     private bool _isResizingRow;
+    private int? _pressedColHeader;
+    private int? _pressedRowHeader;
 
     private double _scrollLeft;
     private double _scrollTop;
@@ -231,6 +253,8 @@
     private ClipboardGrid _internalClipboard = ClipboardGrid.Empty;
     private CellRegion? _clipboardSource;
     private ClipboardVisualMode _clipboardMode = ClipboardVisualMode.None;
+    private InputFile? _csvInput;
+    private string? _csvStatus;
 
     private bool _contextMenuOpen;
     private double _contextMenuX;
@@ -698,8 +722,20 @@
 
     private void OnGlobalMouseUp(MouseEventArgs e)
     {
+        var hadPressedHeader = _pressedColHeader is not null || _pressedRowHeader is not null;
+        if (hadPressedHeader)
+        {
+            _pressedColHeader = null;
+            _pressedRowHeader = null;
+        }
+
         if (_isResizingCol || _isResizingRow)
         {
+            if (hadPressedHeader)
+            {
+                StateHasChanged();
+            }
+
             return;
         }
 
@@ -709,6 +745,11 @@
         }
 
         _isSelecting = false;
+
+        if (hadPressedHeader)
+        {
+            StateHasChanged();
+        }
     }
 
     private void OnCanvasMouseMove(MouseEventArgs e)
@@ -787,6 +828,8 @@
             CommitEdit();
         }
 
+        _pressedColHeader = col;
+        _pressedRowHeader = null;
         Context.SelectColumn(col, e.ShiftKey);
         _isSelecting = false;
         _ = FocusRootAsync();
@@ -804,9 +847,23 @@
             CommitEdit();
         }
 
+        _pressedRowHeader = row;
+        _pressedColHeader = null;
         Context.SelectRow(row, e.ShiftKey);
         _isSelecting = false;
         _ = FocusRootAsync();
+    }
+
+    private void OnHeaderMouseUp(MouseEventArgs e)
+    {
+        if (_pressedColHeader is null && _pressedRowHeader is null)
+        {
+            return;
+        }
+
+        _pressedColHeader = null;
+        _pressedRowHeader = null;
+        StateHasChanged();
     }
 
     private void OnFillHandleMouseDown(MouseEventArgs e)
@@ -1053,6 +1110,81 @@
         await JS.InvokeVoidAsync("console.log", json);
     }
 
+    private async Task ExportCsvAsync()
+    {
+        try
+        {
+            var csv = Context.Model.ToCsv(includeHeaders: false);
+            var fileName = $"table-{DateTime.Now:yyyyMMdd-HHmmss}.csv";
+            await JS.InvokeVoidAsync("bteGrid.downloadText", fileName, csv, "text/csv;charset=utf-8");
+            _csvStatus = $"Exported {fileName}";
+        }
+        catch (Exception ex)
+        {
+            _csvStatus = $"Export failed: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task TriggerCsvImport()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("bteGrid.clickElement", "bte-csv-input");
+        }
+        catch
+        {
+            _csvStatus = "Could not open file picker";
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnCsvFileSelected(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 20 * 1024 * 1024);
+            using var reader = new StreamReader(stream);
+            var csv = await reader.ReadToEndAsync();
+            var model = TableDataModel.FromCsv(csv, firstRowIsHeader: true);
+
+            UnwireContext(Context);
+            Context = new SheetContext(model, addSampleIfEmpty: false);
+            WireContext(Context);
+            _clipboardSource = null;
+            _clipboardMode = ClipboardVisualMode.None;
+            _scrollLeft = 0;
+            _scrollTop = 0;
+            RecomputeVisibleRange();
+
+            if (_jsReady)
+            {
+                try
+                {
+                    await JS.InvokeVoidAsync("bteGrid.setScroll", _viewportRef, 0, 0);
+                }
+                catch
+                {
+                }
+            }
+
+            _csvStatus = $"Imported {file.Name} ({Context.Model.RowCount}×{Context.Model.ColumnCount})";
+        }
+        catch (Exception ex)
+        {
+            _csvStatus = $"Import failed: {ex.Message}";
+        }
+
+        StateHasChanged();
+    }
+
     private void LoadSample()
     {
         UnwireContext(Context);
@@ -1060,6 +1192,7 @@
         model.AddSampleData();
         Context = new SheetContext(model);
         WireContext(Context);
+        _csvStatus = null;
         RecomputeVisibleRange();
         StateHasChanged();
     }

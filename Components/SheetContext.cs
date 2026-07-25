@@ -28,10 +28,10 @@ public class SheetContext
     public CellRegion? DragFillPreview => _dragFillPreview;
     public bool IsDragFilling => _isDragFilling;
 
-    public SheetContext(TableDataModel? model = null)
+    public SheetContext(TableDataModel? model = null, bool addSampleIfEmpty = true)
     {
         Model = model ?? new TableDataModel();
-        if (Model.Cells.Count == 0)
+        if (addSampleIfEmpty && Model.Cells.Count == 0)
         {
             Model.AddSampleData();
         }
@@ -47,6 +47,8 @@ public class SheetContext
         }
 
         CurrentSelection = new CellRegion(0, 0, 0, 0);
+        ActiveCell = new CellPosition(0, 0);
+        SelectionAnchor = ActiveCell;
     }
 
     public void NotifyStateChanged() => StateChanged?.Invoke();
@@ -257,6 +259,30 @@ public class SheetContext
 
     public bool IsActive(int row, int col) =>
         ActiveCell.Row == row && ActiveCell.Col == col;
+
+    public bool IsColumnHeaderSelected(int col)
+    {
+        if (CurrentSelection is not { } sel || Model.RowCount == 0)
+        {
+            return false;
+        }
+
+        var n = sel.Normalize();
+        return n.StartCol <= col && col <= n.EndCol
+               && n.StartRow == 0 && n.EndRow == Model.RowCount - 1;
+    }
+
+    public bool IsRowHeaderSelected(int row)
+    {
+        if (CurrentSelection is not { } sel || Model.ColumnCount == 0)
+        {
+            return false;
+        }
+
+        var n = sel.Normalize();
+        return n.StartRow <= row && row <= n.EndRow
+               && n.StartCol == 0 && n.EndCol == Model.ColumnCount - 1;
+    }
 
     public void InsertRow(int index)
     {
