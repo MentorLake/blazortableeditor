@@ -7,7 +7,7 @@ using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
 
-public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
+public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 {
 	[Parameter] public TableDataModel? Model { get; set; }
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
@@ -51,7 +51,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	private int _lastRow;
 	private int _firstCol;
 	private int _lastCol;
-	private DotNetObjectReference<TableEditor>? _dotNetRef;
+	private DotNetObjectReference<MentorLakeTableEditor>? _dotNetRef;
 	private bool _jsReady;
 	private ClipboardGrid _internalClipboard = ClipboardGrid.Empty;
 	private CellRegion? _clipboardSource;
@@ -150,7 +150,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	{
 		try
 		{
-			_module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", "./_content/MentorLake.BlazorTableEditor/TableEditor.razor.js");
+			_module = await _jsRuntime.InvokeAsync<IJSObjectReference>("import", $"./_content/MentorLake.BlazorTableEditor/{nameof(MentorLakeTableEditor)}.razor.js");
 			_instance = await _module.InvokeAsync<IJSObjectReference>("createInstance");
 			_dotNetRef ??= DotNetObjectReference.Create(this);
 			var ok = await _instance.InvokeAsync<bool>("init", _viewportRef, _dotNetRef);
@@ -1289,7 +1289,15 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 		if (_instance is not null)
 		{
-			await _instance.InvokeVoidAsync("dispose");
+			try
+			{
+				await _instance.InvokeVoidAsync("dispose");
+			}
+			catch (JSDisconnectedException)
+			{
+
+			}
+
 			await _instance.DisposeAsync();
 			_instance = null;
 		}
