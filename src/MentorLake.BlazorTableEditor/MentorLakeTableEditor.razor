@@ -79,7 +79,7 @@
 								@onmouseup="OnHeaderMouseUp"
 								@onmouseleave="OnHeaderMouseUp"
 								@ondblclick="() => BeginHeaderEdit(HeaderEditKind.Column, col)"
-								@oncontextmenu="e => OpenContextMenu(e, 0, col)"
+								@oncontextmenu="e => OpenContextMenu(e, 0, col, selectCell: false, headerKind: HeaderEditKind.Column)"
 								@oncontextmenu:preventDefault="true"
 								@oncontextmenu:stopPropagation="true">
 								@if (editingColHeader)
@@ -126,7 +126,7 @@
 								@onmouseup="OnHeaderMouseUp"
 								@onmouseleave="OnHeaderMouseUp"
 								@ondblclick="() => BeginHeaderEdit(HeaderEditKind.Row, row)"
-								@oncontextmenu="e => OpenContextMenu(e, row, 0)"
+								@oncontextmenu="e => OpenContextMenu(e, row, 0, selectCell: false, headerKind: HeaderEditKind.Row)"
 								@oncontextmenu:preventDefault="true"
 								@oncontextmenu:stopPropagation="true">
 								@if (editingRowHeader)
@@ -242,6 +242,11 @@
 		<div class="bte-context-menu"
 		     style="@($"left:{_contextMenuX}px;top:{_contextMenuY}px;")"
 		     @onmousedown:stopPropagation="true">
+			@if (CanRenameHeader)
+			{
+				<button type="button" class="bte-context-item" @onclick="ContextRenameHeader">Rename</button>
+				<div class="bte-context-separator"></div>
+			}
 			<button type="button" class="bte-context-item" @onclick="ContextUndo" disabled="@(!Context.CanUndo)">Undo</button>
 			<button type="button" class="bte-context-item" @onclick="ContextRedo" disabled="@(!Context.CanRedo)">Redo</button>
 			<div class="bte-context-separator"></div>

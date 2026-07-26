@@ -61,6 +61,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	private double _contextMenuY;
 	private int _contextRow;
 	private int _contextCol;
+	private HeaderEditKind _contextHeaderKind = HeaderEditKind.None;
 	private InputFile? _csvInput;
 	private string? _csvStatus;
 	private bool _disposed;
@@ -673,7 +674,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		StateHasChanged();
 	}
 
-	private void BeginHeaderEdit(HeaderEditKind kind, int index)
+	private void BeginHeaderEdit(HeaderEditKind kind, int index, bool selectHeader = true)
 	{
 		if (kind == HeaderEditKind.None || index < 0)
 		{
@@ -698,7 +699,10 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 				return;
 			}
 
-			Context.SelectColumn(index, extendSelection: false);
+			if (selectHeader)
+			{
+				Context.SelectColumn(index, extendSelection: false);
+			}
 			_editValue = Context.Model.ColumnHeaders[index];
 		}
 		else
@@ -708,7 +712,10 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 				return;
 			}
 
-			Context.SelectRow(index, extendSelection: false);
+			if (selectHeader)
+			{
+				Context.SelectRow(index, extendSelection: false);
+			}
 			_editValue = Context.Model.RowHeaders[index];
 		}
 
@@ -972,7 +979,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		OpenContextMenu(e, Context.ActiveCell.Row, Context.ActiveCell.Col);
 	}
 
-	private void OpenContextMenu(MouseEventArgs e, int row, int col)
+	private void OpenContextMenu(MouseEventArgs e, int row, int col, bool selectCell = true, HeaderEditKind headerKind = HeaderEditKind.None)
 	{
 		if (_isEditing)
 		{
@@ -983,8 +990,9 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		col = Math.Clamp(col, 0, Math.Max(0, Context.Model.ColumnCount - 1));
 		_contextRow = row;
 		_contextCol = col;
+		_contextHeaderKind = headerKind;
 
-		if (!Context.IsSelected(row, col))
+		if (selectCell && !Context.IsSelected(row, col))
 		{
 			Context.SetActiveCell(row, col);
 		}
@@ -1004,7 +1012,25 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		}
 
 		_contextMenuOpen = false;
+		_contextHeaderKind = HeaderEditKind.None;
 		StateHasChanged();
+	}
+
+	private bool CanRenameHeader => _contextHeaderKind != HeaderEditKind.None;
+
+	private void ContextRenameHeader()
+	{
+		if (!CanRenameHeader)
+		{
+			CloseContextMenu();
+			return;
+		}
+
+		var kind = _contextHeaderKind;
+		var index = kind == HeaderEditKind.Column ? _contextCol : _contextRow;
+		_contextMenuOpen = false;
+		_contextHeaderKind = HeaderEditKind.None;
+		BeginHeaderEdit(kind, index, selectHeader: false);
 	}
 
 	private bool CanDeleteRow => Context.Model.RowCount > 1;
