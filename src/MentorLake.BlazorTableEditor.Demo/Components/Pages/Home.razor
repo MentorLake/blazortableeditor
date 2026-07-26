@@ -5,6 +5,7 @@
 
 <PageTitle>Blazor Table Editor</PageTitle>
 
+
 <div class="bte-page">
 	<h1>Blazor Table Editor</h1>
 	<p class="bte-lead">
@@ -13,9 +14,23 @@
 		Use <strong>Export CSV</strong> / <strong>Import CSV</strong> in the toolbar to save or load spreadsheet data.
 	</p>
 
-	<MentorLake.BlazorTableEditor.TableEditor Validator="_validator"/>
+	<button @onclick="OnShowHideEditor">Show/hide editor</button>
+
+	@if (_showEditor)
+	{
+		<div style="height: 600px">
+			<MentorLake.BlazorTableEditor.TableEditor Validator="_validator"/>
+		</div>
+	}
 </div>
 
 @code {
+	private bool _showEditor = true;
 	private readonly ITableValidator _validator = new DemoTableValidator();
+
+	private void OnShowHideEditor()
+	{
+		_showEditor = !_showEditor;
+	}
+
 }

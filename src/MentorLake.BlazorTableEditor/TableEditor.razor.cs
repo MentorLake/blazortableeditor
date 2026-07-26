@@ -1109,13 +1109,13 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 		if (_instance is not null)
 		{
+			await _instance.InvokeVoidAsync("dispose");
 			await _instance.DisposeAsync();
 			_instance = null;
 		}
 
 		if (_module is not null)
 		{
-			await _module.InvokeVoidAsync("dispose");
 			await _module.DisposeAsync();
 			_module = null;
 		}
