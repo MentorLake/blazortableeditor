@@ -331,6 +331,54 @@ public class SheetContext
 		NotifyStateChanged();
 	}
 
+	public void SetColumnHeader(int col, string? header)
+	{
+		if (col < 0 || col >= Model.ColumnCount)
+		{
+			return;
+		}
+
+		var value = header?.Trim() ?? string.Empty;
+		if (string.IsNullOrEmpty(value))
+		{
+			value = GetColumnLetter(col);
+		}
+
+		if (Model.ColumnHeaders[col] == value)
+		{
+			return;
+		}
+
+		PushUndoSnapshot();
+		Model.ColumnHeaders[col] = value;
+		NotifyDataChanged();
+		NotifyStateChanged();
+	}
+
+	public void SetRowHeader(int row, string? header)
+	{
+		if (row < 0 || row >= Model.RowCount)
+		{
+			return;
+		}
+
+		var value = header?.Trim() ?? string.Empty;
+		if (string.IsNullOrEmpty(value))
+		{
+			value = (row + 1).ToString();
+		}
+
+		if (Model.RowHeaders[row] == value)
+		{
+			return;
+		}
+
+		PushUndoSnapshot();
+		Model.RowHeaders[row] = value;
+		NotifyDataChanged();
+		NotifyStateChanged();
+	}
+
 	public void SetActiveCell(int row, int col, bool extendSelection = false, bool notify = true)
 	{
 		if (Model.RowCount == 0 || Model.ColumnCount == 0)
@@ -489,7 +537,7 @@ public class SheetContext
 		}
 
 		PushUndoSnapshot();
-		Model.RowHeaders.Insert(index, (Model.RowCount + 1).ToString());
+		Model.RowHeaders.Insert(index, (index + 1).ToString());
 
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
@@ -508,11 +556,6 @@ public class SheetContext
 		Model.Cells = newCells;
 
 		ShiftMap(RowHeights, index, insert: true, DefaultRowHeight);
-
-		for (int r = 0; r < Model.RowCount; r++)
-		{
-			Model.RowHeaders[r] = (r + 1).ToString();
-		}
 
 		AdjustSelectionAfterRowInsert(index);
 		NotifyDataChanged();
@@ -547,11 +590,6 @@ public class SheetContext
 
 		ShiftMap(RowHeights, index, insert: false, DefaultRowHeight);
 
-		for (int r = 0; r < Model.RowCount; r++)
-		{
-			Model.RowHeaders[r] = (r + 1).ToString();
-		}
-
 		AdjustSelectionAfterRowDelete(index);
 		NotifyDataChanged();
 		NotifyStateChanged();
@@ -565,7 +603,8 @@ public class SheetContext
 		}
 
 		PushUndoSnapshot();
-		Model.ColumnHeaders.Insert(index, GetColumnLetter(Model.ColumnCount));
+		// Default label for the new column only; preserve custom headers on existing columns.
+		Model.ColumnHeaders.Insert(index, GetColumnLetter(index));
 
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
@@ -585,11 +624,6 @@ public class SheetContext
 
 		ShiftMap(ColumnWidths, index, insert: true, DefaultColumnWidth);
 
-		for (int c = 0; c < Model.ColumnCount; c++)
-		{
-			Model.ColumnHeaders[c] = GetColumnLetter(c);
-		}
-
 		AdjustSelectionAfterColumnInsert(index);
 		NotifyDataChanged();
 		NotifyStateChanged();
@@ -602,6 +636,7 @@ public class SheetContext
 			return;
 		}
 
+		PushUndoSnapshot();
 		Model.ColumnHeaders.RemoveAt(index);
 
 		var newCells = new Dictionary<string, CellValue>();
@@ -621,11 +656,6 @@ public class SheetContext
 		Model.Cells = newCells;
 
 		ShiftMap(ColumnWidths, index, insert: false, DefaultColumnWidth);
-
-		for (int c = 0; c < Model.ColumnCount; c++)
-		{
-			Model.ColumnHeaders[c] = GetColumnLetter(c);
-		}
 
 		AdjustSelectionAfterColumnDelete(index);
 		NotifyDataChanged();

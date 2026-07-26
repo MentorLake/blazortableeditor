@@ -18,10 +18,26 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	private ElementReference _rootRef;
 	private ElementReference _viewportRef;
 	private ElementReference _editorRef;
+	private ElementReference _headerEditorRef;
 	private bool _isEditing;
+	private HeaderEditKind _headerEditKind = HeaderEditKind.None;
+	private int _headerEditIndex = -1;
 	private string _editValue = string.Empty;
 	private CellPosition _editPos = CellPosition.Invalid;
 	private bool _suppressBlurCommit;
+
+	private enum HeaderEditKind
+	{
+		None,
+		Column,
+		Row
+	}
+
+	private bool IsEditingHeader => _headerEditKind != HeaderEditKind.None;
+	private bool IsEditingColumnHeader(int col) =>
+		_isEditing && _headerEditKind == HeaderEditKind.Column && _headerEditIndex == col;
+	private bool IsEditingRowHeader(int row) =>
+		_isEditing && _headerEditKind == HeaderEditKind.Row && _headerEditIndex == row;
 	private bool _isSelecting;
 	private bool _isResizingCol;
 	private bool _isResizingRow;
@@ -115,7 +131,14 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 		{
 			try
 			{
-				await _editorRef.FocusAsync();
+				if (IsEditingHeader)
+				{
+					await _headerEditorRef.FocusAsync();
+				}
+				else
+				{
+					await _editorRef.FocusAsync();
+				}
 			}
 			catch
 			{
@@ -568,6 +591,12 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 			return;
 		}
 
+		// Keep focus in the header editor when clicking the header being edited.
+		if (IsEditingColumnHeader(col))
+		{
+			return;
+		}
+
 		if (_isEditing)
 		{
 			CommitEdit();
@@ -583,6 +612,12 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	private void OnRowHeaderMouseDown(int row, MouseEventArgs e)
 	{
 		if (e.Button != 0)
+		{
+			return;
+		}
+
+		// Keep focus in the header editor when clicking the header being edited.
+		if (IsEditingRowHeader(row))
 		{
 			return;
 		}
@@ -623,11 +658,66 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 
 	private void BeginEdit(int row, int col)
 	{
+		if (IsEditingHeader)
+		{
+			CommitEdit();
+		}
+
 		Context.SetActiveCell(row, col);
 		var cell = Context.GetValue(row, col);
 		_editValue = cell?.Value?.ToString() ?? string.Empty;
 		_editPos = new CellPosition(row, col);
+		_headerEditKind = HeaderEditKind.None;
+		_headerEditIndex = -1;
 		_isEditing = true;
+		StateHasChanged();
+	}
+
+	private void BeginHeaderEdit(HeaderEditKind kind, int index)
+	{
+		if (kind == HeaderEditKind.None || index < 0)
+		{
+			return;
+		}
+
+		if (_isEditing)
+		{
+			// Already editing this same header — ignore repeated dblclick.
+			if (_headerEditKind == kind && _headerEditIndex == index)
+			{
+				return;
+			}
+
+			CommitEdit();
+		}
+
+		if (kind == HeaderEditKind.Column)
+		{
+			if (index >= Context.Model.ColumnCount)
+			{
+				return;
+			}
+
+			Context.SelectColumn(index, extendSelection: false);
+			_editValue = Context.Model.ColumnHeaders[index];
+		}
+		else
+		{
+			if (index >= Context.Model.RowCount)
+			{
+				return;
+			}
+
+			Context.SelectRow(index, extendSelection: false);
+			_editValue = Context.Model.RowHeaders[index];
+		}
+
+		_headerEditKind = kind;
+		_headerEditIndex = index;
+		_editPos = CellPosition.Invalid;
+		_isEditing = true;
+		_pressedColHeader = null;
+		_pressedRowHeader = null;
 		StateHasChanged();
 	}
 
@@ -639,15 +729,35 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 			return;
 		}
 
-		if (!_isEditing || !_editPos.IsValid)
+		if (!_isEditing)
+		{
+			return;
+		}
+
+		if (IsEditingHeader)
+		{
+			if (_headerEditKind == HeaderEditKind.Column)
+			{
+				Context.SetColumnHeader(_headerEditIndex, _editValue);
+			}
+			else if (_headerEditKind == HeaderEditKind.Row)
+			{
+				Context.SetRowHeader(_headerEditIndex, _editValue);
+			}
+
+			ClearEditState();
+			_ = FocusRootAsync();
+			StateHasChanged();
+			return;
+		}
+
+		if (!_editPos.IsValid)
 		{
 			return;
 		}
 
 		Context.SetValue(_editPos.Row, _editPos.Col, _editValue);
-		_isEditing = false;
-		_editPos = CellPosition.Invalid;
-		_editValue = string.Empty;
+		ClearEditState();
 		_ = FocusRootAsync();
 		StateHasChanged();
 	}
@@ -655,11 +765,18 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 	private void CancelEdit()
 	{
 		_suppressBlurCommit = true;
-		_isEditing = false;
-		_editPos = CellPosition.Invalid;
-		_editValue = string.Empty;
+		ClearEditState();
 		_ = FocusRootAsync();
 		StateHasChanged();
+	}
+
+	private void ClearEditState()
+	{
+		_isEditing = false;
+		_editPos = CellPosition.Invalid;
+		_headerEditKind = HeaderEditKind.None;
+		_headerEditIndex = -1;
+		_editValue = string.Empty;
 	}
 
 	private void OnEditorKeyDown(KeyboardEventArgs e)
@@ -674,9 +791,7 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 				Context.SetValue(row, col, _editValue);
 			}
 
-			_isEditing = false;
-			_editPos = CellPosition.Invalid;
-			_editValue = string.Empty;
+			ClearEditState();
 			Context.SetActiveCell(row + 1, col);
 			_ = FocusRootAsync();
 		}
@@ -694,11 +809,74 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 				Context.SetValue(row, col, _editValue);
 			}
 
-			_isEditing = false;
-			_editPos = CellPosition.Invalid;
-			_editValue = string.Empty;
+			ClearEditState();
 			Context.SetActiveCell(row, col + (e.ShiftKey ? -1 : 1));
 			_ = FocusRootAsync();
+		}
+	}
+
+	private void OnHeaderEditorKeyDown(KeyboardEventArgs e)
+	{
+		if (e.Key == "Enter")
+		{
+			var kind = _headerEditKind;
+			var index = _headerEditIndex;
+			var value = _editValue;
+			_suppressBlurCommit = true;
+			if (_isEditing && IsEditingHeader)
+			{
+				if (kind == HeaderEditKind.Column)
+				{
+					Context.SetColumnHeader(index, value);
+				}
+				else if (kind == HeaderEditKind.Row)
+				{
+					Context.SetRowHeader(index, value);
+				}
+			}
+
+			ClearEditState();
+			_ = FocusRootAsync();
+			StateHasChanged();
+		}
+		else if (e.Key == "Escape")
+		{
+			CancelEdit();
+		}
+		else if (e.Key == "Tab")
+		{
+			var kind = _headerEditKind;
+			var index = _headerEditIndex;
+			var value = _editValue;
+			_suppressBlurCommit = true;
+			if (_isEditing && IsEditingHeader)
+			{
+				if (kind == HeaderEditKind.Column)
+				{
+					Context.SetColumnHeader(index, value);
+				}
+				else if (kind == HeaderEditKind.Row)
+				{
+					Context.SetRowHeader(index, value);
+				}
+			}
+
+			ClearEditState();
+
+			var next = index + (e.ShiftKey ? -1 : 1);
+			if (kind == HeaderEditKind.Column && next >= 0 && next < Context.Model.ColumnCount)
+			{
+				BeginHeaderEdit(HeaderEditKind.Column, next);
+			}
+			else if (kind == HeaderEditKind.Row && next >= 0 && next < Context.Model.RowCount)
+			{
+				BeginHeaderEdit(HeaderEditKind.Row, next);
+			}
+			else
+			{
+				_ = FocusRootAsync();
+				StateHasChanged();
+			}
 		}
 	}
 
@@ -779,6 +957,8 @@ public partial class TableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 				{
 					_editValue = e.Key;
 					_editPos = Context.ActiveCell;
+					_headerEditKind = HeaderEditKind.None;
+					_headerEditIndex = -1;
 					_isEditing = true;
 					StateHasChanged();
 				}
