@@ -18,6 +18,8 @@ An AI-generated high-performance, Excel-like table editor component library for 
 
 ## Installation
 
+[![MentorLake.BlazorTableEditor NuGet Badge](https://img.shields.io/nuget/v/MentorLake.BlazorTableEditor)](https://www.nuget.org/packages/MentorLake.BlazorTableEditor/)
+
 ```bash
 dotnet add package MentorLake.BlazorTableEditor
 ```
