@@ -1,8 +1,5 @@
 using MentorLake.BlazorTableEditor.Models;
-
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
@@ -68,7 +65,7 @@ public partial class MentorLakeTableEditor
 	}
 
 
-	private static string BuildCellStyle(int left, int top, int width, int height, CellValue? cell)
+	private static string BuildCellStyle(int left, int top, int width, int height, CellValue cell)
 	{
 		var style = $"left:{left}px;top:{top}px;width:{width}px;height:{height}px;";
 		if (!string.IsNullOrEmpty(cell?.BackgroundColor) && cell!.BackgroundColor != "#ffffff")
@@ -107,24 +104,24 @@ public partial class MentorLakeTableEditor
 
 	private void RecomputeVisibleRange()
 	{
-		int rowCount = Context.Model.RowCount;
-		int colCount = Context.Model.ColumnCount;
+		var rowCount = Context.Model.RowCount;
+		var colCount = Context.Model.ColumnCount;
 		if (rowCount == 0 || colCount == 0)
 		{
 			_firstRow = _lastRow = _firstCol = _lastCol = 0;
 			return;
 		}
 
-		double bodyScrollTop = _scrollTop;
-		double bodyViewHeight = Math.Max(1, _viewportHeight - SheetContext.ColumnHeaderHeight);
-		double bodyScrollLeft = _scrollLeft;
-		double bodyViewWidth = Math.Max(1, _viewportWidth - SheetContext.RowHeaderWidth);
+		var bodyScrollTop = _scrollTop;
+		var bodyViewHeight = Math.Max(1, _viewportHeight - SheetContext.ColumnHeaderHeight);
+		var bodyScrollLeft = _scrollLeft;
+		var bodyViewWidth = Math.Max(1, _viewportWidth - SheetContext.RowHeaderWidth);
 
-		int y = 0;
+		var y = 0;
 		_firstRow = 0;
-		for (int r = 0; r < rowCount; r++)
+		for (var r = 0; r < rowCount; r++)
 		{
-			int h = Context.GetRowHeight(r);
+			var h = Context.GetRowHeight(r);
 			if (y + h > bodyScrollTop)
 			{
 				_firstRow = r;
@@ -137,10 +134,10 @@ public partial class MentorLakeTableEditor
 
 		_firstRow = Math.Max(0, _firstRow - ViewportOverscan);
 
-		double visibleBottom = bodyScrollTop + bodyViewHeight;
+		var visibleBottom = bodyScrollTop + bodyViewHeight;
 		y = Context.GetRowTop(_firstRow);
 		_lastRow = _firstRow;
-		for (int r = _firstRow; r < rowCount; r++)
+		for (var r = _firstRow; r < rowCount; r++)
 		{
 			y += Context.GetRowHeight(r);
 			_lastRow = r;
@@ -152,11 +149,11 @@ public partial class MentorLakeTableEditor
 
 		_lastRow = Math.Min(rowCount - 1, _lastRow + ViewportOverscan);
 
-		int x = 0;
+		var x = 0;
 		_firstCol = 0;
-		for (int c = 0; c < colCount; c++)
+		for (var c = 0; c < colCount; c++)
 		{
-			int w = Context.GetColumnWidth(c);
+			var w = Context.GetColumnWidth(c);
 			if (x + w > bodyScrollLeft)
 			{
 				_firstCol = c;
@@ -169,10 +166,10 @@ public partial class MentorLakeTableEditor
 
 		_firstCol = Math.Max(0, _firstCol - ViewportOverscan);
 
-		double visibleRight = bodyScrollLeft + bodyViewWidth;
+		var visibleRight = bodyScrollLeft + bodyViewWidth;
 		x = Context.GetColumnLeft(_firstCol);
 		_lastCol = _firstCol;
-		for (int c = _firstCol; c < colCount; c++)
+		for (var c = _firstCol; c < colCount; c++)
 		{
 			x += Context.GetColumnWidth(c);
 			_lastCol = c;

@@ -1,17 +1,14 @@
 using MentorLake.BlazorTableEditor.Models;
-
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
 
 public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDisposable
 {
-	[Parameter] public TableDataModel? Model { get; set; }
+	[Parameter] public TableDataModel Model { get; set; }
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
-	[Parameter] public ITableValidator? Validator { get; set; }
+	[Parameter] public ITableValidator Validator { get; set; }
 	[Parameter] public bool ShowToolbar { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;
@@ -32,11 +29,11 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	private int _lastRow;
 	private int _firstCol;
 	private int _lastCol;
-	private DotNetObjectReference<MentorLakeTableEditor>? _dotNetRef;
+	private DotNetObjectReference<MentorLakeTableEditor> _dotNetRef;
 	private bool _jsReady;
 	private bool _disposed;
-	private IJSObjectReference? _module;
-	private IJSObjectReference? _instance;
+	private IJSObjectReference _module;
+	private IJSObjectReference _instance;
 
 
 	protected override void OnInitialized()
@@ -49,8 +46,8 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 
 	protected override void OnParametersSet()
 	{
-		bool modelChanged = Model is not null && !ReferenceEquals(Context.Model, Model);
-		bool validatorChanged = !ReferenceEquals(Context.Validator, Validator);
+		var modelChanged = Model is not null && !ReferenceEquals(Context.Model, Model);
+		var validatorChanged = !ReferenceEquals(Context.Validator, Validator);
 
 		if (modelChanged)
 		{

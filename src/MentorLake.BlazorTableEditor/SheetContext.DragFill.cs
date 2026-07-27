@@ -33,10 +33,10 @@ public partial class SheetContext
 		col = Math.Clamp(col, 0, Model.ColumnCount - 1);
 
 		var source = _dragFillSource;
-		int startRow = source.StartRow;
-		int endRow = source.EndRow;
-		int startCol = source.StartCol;
-		int endCol = source.EndCol;
+		var startRow = source.StartRow;
+		var endRow = source.EndRow;
+		var startCol = source.StartCol;
+		var endCol = source.EndCol;
 
 		if (row > source.EndRow)
 		{
@@ -100,19 +100,19 @@ public partial class SheetContext
 			return;
 		}
 
-		for (int tr = target.StartRow; tr <= target.EndRow; tr++)
+		for (var tr = target.StartRow; tr <= target.EndRow; tr++)
 		{
-			for (int tc = target.StartCol; tc <= target.EndCol; tc++)
+			for (var tc = target.StartCol; tc <= target.EndCol; tc++)
 			{
 				if (source.Contains(new CellPosition(tr, tc)))
 				{
 					continue;
 				}
 
-				int srcRowOffset = Math.Abs(tr - source.StartRow) % source.Height;
-				int srcColOffset = Math.Abs(tc - source.StartCol) % source.Width;
-				int sr = source.StartRow + srcRowOffset;
-				int sc = source.StartCol + srcColOffset;
+				var srcRowOffset = Math.Abs(tr - source.StartRow) % source.Height;
+				var srcColOffset = Math.Abs(tc - source.StartCol) % source.Width;
+				var sr = source.StartRow + srcRowOffset;
+				var sc = source.StartCol + srcColOffset;
 
 				var sourceValue = GetValue(sr, sc);
 				if (sourceValue is not null)

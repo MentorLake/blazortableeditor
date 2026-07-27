@@ -78,12 +78,12 @@ public partial class SheetContext
 		}
 
 		col = Math.Clamp(col, 0, Model.ColumnCount - 1);
-		int lastRow = Model.RowCount - 1;
+		var lastRow = Model.RowCount - 1;
 
 		if (extendSelection)
 		{
-			int startCol = Math.Min(SelectionAnchor.Col, col);
-			int endCol = Math.Max(SelectionAnchor.Col, col);
+			var startCol = Math.Min(SelectionAnchor.Col, col);
+			var endCol = Math.Max(SelectionAnchor.Col, col);
 			ActiveCell = new CellPosition(0, col);
 			CurrentSelection = new CellRegion(0, startCol, lastRow, endCol);
 		}
@@ -105,12 +105,12 @@ public partial class SheetContext
 		}
 
 		row = Math.Clamp(row, 0, Model.RowCount - 1);
-		int lastCol = Model.ColumnCount - 1;
+		var lastCol = Model.ColumnCount - 1;
 
 		if (extendSelection)
 		{
-			int startRow = Math.Min(SelectionAnchor.Row, row);
-			int endRow = Math.Max(SelectionAnchor.Row, row);
+			var startRow = Math.Min(SelectionAnchor.Row, row);
+			var endRow = Math.Max(SelectionAnchor.Row, row);
 			ActiveCell = new CellPosition(row, 0);
 			CurrentSelection = new CellRegion(startRow, 0, endRow, lastCol);
 		}
@@ -171,8 +171,8 @@ public partial class SheetContext
 		if (CurrentSelection is { } sel)
 		{
 			var n = sel.Normalize();
-			int start = n.StartRow >= index ? n.StartRow + 1 : n.StartRow;
-			int end = n.EndRow >= index ? n.EndRow + 1 : n.EndRow;
+			var start = n.StartRow >= index ? n.StartRow + 1 : n.StartRow;
+			var end = n.EndRow >= index ? n.EndRow + 1 : n.EndRow;
 			CurrentSelection = new CellRegion(start, n.StartCol, end, n.EndCol);
 		}
 	}
@@ -186,15 +186,15 @@ public partial class SheetContext
 			var n = sel.Normalize();
 			if (n.StartRow == index && n.EndRow == index)
 			{
-				int row = Math.Min(index, Model.RowCount - 1);
+				var row = Math.Min(index, Model.RowCount - 1);
 				CurrentSelection = new CellRegion(row, n.StartCol, row, n.EndCol);
 				ActiveCell = new CellPosition(row, Math.Clamp(ActiveCell.Col, n.StartCol, n.EndCol));
 				SelectionAnchor = ActiveCell;
 			}
 			else
 			{
-				int start = n.StartRow > index ? n.StartRow - 1 : n.StartRow;
-				int end = n.EndRow >= index ? n.EndRow - 1 : n.EndRow;
+				var start = n.StartRow > index ? n.StartRow - 1 : n.StartRow;
+				var end = n.EndRow >= index ? n.EndRow - 1 : n.EndRow;
 				if (end < start)
 				{
 					end = start;
@@ -216,8 +216,8 @@ public partial class SheetContext
 		if (CurrentSelection is { } sel)
 		{
 			var n = sel.Normalize();
-			int start = n.StartCol >= index ? n.StartCol + 1 : n.StartCol;
-			int end = n.EndCol >= index ? n.EndCol + 1 : n.EndCol;
+			var start = n.StartCol >= index ? n.StartCol + 1 : n.StartCol;
+			var end = n.EndCol >= index ? n.EndCol + 1 : n.EndCol;
 			CurrentSelection = new CellRegion(n.StartRow, start, n.EndRow, end);
 		}
 	}
@@ -231,15 +231,15 @@ public partial class SheetContext
 			var n = sel.Normalize();
 			if (n.StartCol == index && n.EndCol == index)
 			{
-				int col = Math.Min(index, Model.ColumnCount - 1);
+				var col = Math.Min(index, Model.ColumnCount - 1);
 				CurrentSelection = new CellRegion(n.StartRow, col, n.EndRow, col);
 				ActiveCell = new CellPosition(Math.Clamp(ActiveCell.Row, n.StartRow, n.EndRow), col);
 				SelectionAnchor = ActiveCell;
 			}
 			else
 			{
-				int start = n.StartCol > index ? n.StartCol - 1 : n.StartCol;
-				int end = n.EndCol >= index ? n.EndCol - 1 : n.EndCol;
+				var start = n.StartCol > index ? n.StartCol - 1 : n.StartCol;
+				var end = n.EndCol >= index ? n.EndCol - 1 : n.EndCol;
 				if (end < start)
 				{
 					end = start;
@@ -297,12 +297,12 @@ public partial class SheetContext
 			return;
 		}
 
-		int row = Math.Clamp(ActiveCell.Row, 0, Model.RowCount - 1);
-		int col = Math.Clamp(ActiveCell.Col, 0, Model.ColumnCount - 1);
+		var row = Math.Clamp(ActiveCell.Row, 0, Model.RowCount - 1);
+		var col = Math.Clamp(ActiveCell.Col, 0, Model.ColumnCount - 1);
 		ActiveCell = new CellPosition(row, col);
 
-		int ar = Math.Clamp(SelectionAnchor.Row, 0, Model.RowCount - 1);
-		int ac = Math.Clamp(SelectionAnchor.Col, 0, Model.ColumnCount - 1);
+		var ar = Math.Clamp(SelectionAnchor.Row, 0, Model.RowCount - 1);
+		var ac = Math.Clamp(SelectionAnchor.Col, 0, Model.ColumnCount - 1);
 		SelectionAnchor = new CellPosition(ar, ac);
 
 		if (CurrentSelection is { } sel)

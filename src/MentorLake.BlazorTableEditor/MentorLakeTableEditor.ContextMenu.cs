@@ -1,15 +1,9 @@
-using MentorLake.BlazorTableEditor.Models;
-
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
 
 public partial class MentorLakeTableEditor
 {
-
 	private bool _contextMenuOpen;
 	private double _contextMenuX;
 	private double _contextMenuY;

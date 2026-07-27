@@ -4,14 +4,14 @@ namespace MentorLake.BlazorTableEditor;
 
 public partial class SheetContext
 {
-	private ITableValidator? _validator;
+	private ITableValidator _validator;
 	private readonly Dictionary<CellPosition, string> _validationErrors = new();
 
 	public IReadOnlyDictionary<CellPosition, string> ValidationErrors => _validationErrors;
 
-	public ITableValidator? Validator => _validator;
+	public ITableValidator Validator => _validator;
 
-	public void SetValidator(ITableValidator? validator)
+	public void SetValidator(ITableValidator validator)
 	{
 		_validator = validator;
 		Revalidate();
@@ -20,7 +20,7 @@ public partial class SheetContext
 	public bool HasError(int row, int col) =>
 		_validationErrors.ContainsKey(new CellPosition(row, col));
 
-	public string? GetError(int row, int col)
+	public string GetError(int row, int col)
 	{
 		_validationErrors.TryGetValue(new CellPosition(row, col), out var msg);
 		return msg;

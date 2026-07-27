@@ -4,11 +4,11 @@ namespace MentorLake.BlazorTableEditor;
 
 public partial class SheetContext
 {
-	public CellValue? GetValue(int row, int col) => Model.GetCell(row, col);
+	public CellValue GetValue(int row, int col) => Model.GetCell(row, col);
 
 	public string GetCellDisplay(int row, int col) => GetValue(row, col)?.ToString() ?? string.Empty;
 
-	public void SetValue(int row, int col, object? value, string? format = null)
+	public void SetValue(int row, int col, object value, string format = null)
 	{
 		PushUndoSnapshot();
 		if (value is null || (value is string s && string.IsNullOrEmpty(s)))
@@ -31,7 +31,7 @@ public partial class SheetContext
 		NotifyStateChanged();
 	}
 
-	public void SetColumnHeader(int col, string? header)
+	public void SetColumnHeader(int col, string header)
 	{
 		if (col < 0 || col >= Model.ColumnCount)
 		{
@@ -59,9 +59,9 @@ public partial class SheetContext
 	{
 		PushUndoSnapshot();
 		var region = GetEffectiveSelection();
-		for (int r = region.StartRow; r <= region.EndRow; r++)
+		for (var r = region.StartRow; r <= region.EndRow; r++)
 		{
-			for (int c = region.StartCol; c <= region.EndCol; c++)
+			for (var c = region.StartCol; c <= region.EndCol; c++)
 			{
 				Model.ClearCell(r, c);
 			}
@@ -80,8 +80,8 @@ public partial class SheetContext
 
 	private static string GetColumnLetter(int colIndex)
 	{
-		string letter = string.Empty;
-		int index = colIndex;
+		var letter = string.Empty;
+		var index = colIndex;
 		while (index >= 0)
 		{
 			letter = (char)('A' + (index % 26)) + letter;

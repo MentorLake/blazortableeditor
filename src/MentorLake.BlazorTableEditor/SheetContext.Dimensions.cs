@@ -38,8 +38,8 @@ public partial class SheetContext
 
 	public int GetColumnLeft(int col)
 	{
-		int left = 0;
-		for (int c = 0; c < col && c < Model.ColumnCount; c++)
+		var left = 0;
+		for (var c = 0; c < col && c < Model.ColumnCount; c++)
 		{
 			left += GetColumnWidth(c);
 		}
@@ -49,8 +49,8 @@ public partial class SheetContext
 
 	public int GetRowTop(int row)
 	{
-		int top = 0;
-		for (int r = 0; r < row && r < Model.RowCount; r++)
+		var top = 0;
+		for (var r = 0; r < row && r < Model.RowCount; r++)
 		{
 			top += GetRowHeight(r);
 		}
@@ -60,8 +60,8 @@ public partial class SheetContext
 
 	public int GetTotalWidth()
 	{
-		int total = 0;
-		for (int c = 0; c < Model.ColumnCount; c++)
+		var total = 0;
+		for (var c = 0; c < Model.ColumnCount; c++)
 		{
 			total += GetColumnWidth(c);
 		}
@@ -71,8 +71,8 @@ public partial class SheetContext
 
 	public int GetTotalHeight()
 	{
-		int total = 0;
-		for (int r = 0; r < Model.RowCount; r++)
+		var total = 0;
+		for (var r = 0; r < Model.RowCount; r++)
 		{
 			total += GetRowHeight(r);
 		}

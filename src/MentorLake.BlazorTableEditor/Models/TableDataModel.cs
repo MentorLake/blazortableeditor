@@ -41,13 +41,13 @@ public class TableDataModel
 		return letter;
 	}
 
-	public CellValue? GetCell(int row, int col)
+	public CellValue GetCell(int row, int col)
 	{
 		var key = GetKey(row, col);
 		return Cells.TryGetValue(key, out var value) ? value : null;
 	}
 
-	public void SetCell(int row, int col, CellValue? value)
+	public void SetCell(int row, int col, CellValue value)
 	{
 		var key = GetKey(row, col);
 		if (value == null || (value.Value == null && string.IsNullOrEmpty(value.Format)))

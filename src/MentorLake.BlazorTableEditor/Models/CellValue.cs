@@ -2,12 +2,12 @@ namespace MentorLake.BlazorTableEditor.Models;
 
 public class CellValue
 {
-	public object? Value { get; set; }
-	public string? Format { get; set; }
-	public string? BackgroundColor { get; set; } = "#ffffff";
-	public string? TextColor { get; set; } = "#000000";
+	public object Value { get; set; }
+	public string Format { get; set; }
+	public string BackgroundColor { get; set; } = "#ffffff";
+	public string TextColor { get; set; } = "#000000";
 
-	public CellValue(object? value = null)
+	public CellValue(object value = null)
 	{
 		Value = value;
 	}

@@ -1,8 +1,5 @@
 using MentorLake.BlazorTableEditor.Models;
-
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
@@ -10,8 +7,8 @@ namespace MentorLake.BlazorTableEditor;
 public partial class MentorLakeTableEditor
 {
 
-	private InputFile? _csvInput;
-	private string? _csvStatus;
+	private InputFile _csvInput;
+	private string _csvStatus;
 
 	private async Task ExportCsvAsync()
 	{

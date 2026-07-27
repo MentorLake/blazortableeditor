@@ -1,8 +1,4 @@
-using MentorLake.BlazorTableEditor.Models;
-
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
@@ -101,11 +97,11 @@ public partial class MentorLakeTableEditor
 		}
 	}
 
-	private async Task<string?> ReadClipboardTextAsync()
+	private async Task<string> ReadClipboardTextAsync()
 	{
 		try
 		{
-			return await _instance.InvokeAsync<string?>("readText");
+			return await _instance.InvokeAsync<string>("readText");
 		}
 		catch
 		{

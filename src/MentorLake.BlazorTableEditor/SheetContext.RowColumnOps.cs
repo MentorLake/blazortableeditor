@@ -17,7 +17,7 @@ public partial class SheetContext
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
 		{
-			ParseKey(kvp.Key, out int r, out int c);
+			ParseKey(kvp.Key, out var r, out var c);
 			if (r >= index)
 			{
 				newCells[$"{r + 1},{c}"] = kvp.Value;
@@ -50,7 +50,7 @@ public partial class SheetContext
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
 		{
-			ParseKey(kvp.Key, out int r, out int c);
+			ParseKey(kvp.Key, out var r, out var c);
 			if (r < index)
 			{
 				newCells[kvp.Key] = kvp.Value;
@@ -84,7 +84,7 @@ public partial class SheetContext
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
 		{
-			ParseKey(kvp.Key, out int r, out int c);
+			ParseKey(kvp.Key, out var r, out var c);
 			if (c >= index)
 			{
 				newCells[$"{r},{c + 1}"] = kvp.Value;
@@ -117,7 +117,7 @@ public partial class SheetContext
 		var newCells = new Dictionary<string, CellValue>();
 		foreach (var kvp in Model.Cells)
 		{
-			ParseKey(kvp.Key, out int r, out int c);
+			ParseKey(kvp.Key, out var r, out var c);
 			if (c < index)
 			{
 				newCells[kvp.Key] = kvp.Value;

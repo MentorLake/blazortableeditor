@@ -18,10 +18,10 @@ public partial class SheetContext
 	public Dictionary<int, int> RowHeights { get; } = new();
 	public Dictionary<int, int> ColumnWidths { get; } = new();
 
-	public event Action? StateChanged;
-	public event Action? DataChanged;
+	public event Action StateChanged;
+	public event Action DataChanged;
 
-	public SheetContext(TableDataModel? model = null, bool addSampleIfEmpty = true)
+	public SheetContext(TableDataModel model = null, bool addSampleIfEmpty = true)
 	{
 		Model = model ?? new TableDataModel();
 		if (addSampleIfEmpty && Model.Cells.Count == 0)
@@ -29,12 +29,12 @@ public partial class SheetContext
 			Model.AddSampleData();
 		}
 
-		for (int r = 0; r < Model.RowCount; r++)
+		for (var r = 0; r < Model.RowCount; r++)
 		{
 			RowHeights[r] = DefaultRowHeight;
 		}
 
-		for (int c = 0; c < Model.ColumnCount; c++)
+		for (var c = 0; c < Model.ColumnCount; c++)
 		{
 			ColumnWidths[c] = DefaultColumnWidth;
 		}

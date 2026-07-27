@@ -4,9 +4,9 @@ public sealed class ClipboardGrid
 {
 	public int Rows { get; init; }
 	public int Cols { get; init; }
-	public CellValue?[,] Cells { get; init; } = new CellValue?[0, 0];
+	public CellValue[,] Cells { get; init; } = new CellValue[0, 0];
 
-	public static ClipboardGrid Empty { get; } = new() { Rows = 0, Cols = 0, Cells = new CellValue?[0, 0] };
+	public static ClipboardGrid Empty { get; } = new() { Rows = 0, Cols = 0, Cells = new CellValue[0, 0] };
 
 	public bool IsEmpty => Rows == 0 || Cols == 0;
 
@@ -18,10 +18,10 @@ public sealed class ClipboardGrid
 		}
 
 		var lines = new string[Rows];
-		for (int r = 0; r < Rows; r++)
+		for (var r = 0; r < Rows; r++)
 		{
 			var parts = new string[Cols];
-			for (int c = 0; c < Cols; c++)
+			for (var c = 0; c < Cols; c++)
 			{
 				parts[c] = EscapeTsv(Cells[r, c]?.ToString() ?? string.Empty);
 			}
@@ -32,7 +32,7 @@ public sealed class ClipboardGrid
 		return string.Join('\n', lines);
 	}
 
-	public static ClipboardGrid FromTsv(string? text)
+	public static ClipboardGrid FromTsv(string text)
 	{
 		if (string.IsNullOrEmpty(text))
 		{
@@ -51,19 +51,19 @@ public sealed class ClipboardGrid
 			return Empty;
 		}
 
-		int rows = lines.Length;
-		int cols = 1;
+		var rows = lines.Length;
+		var cols = 1;
 		var parsed = new string[rows][];
-		for (int r = 0; r < rows; r++)
+		for (var r = 0; r < rows; r++)
 		{
 			parsed[r] = SplitTsvLine(lines[r]);
 			cols = Math.Max(cols, parsed[r].Length);
 		}
 
-		var cells = new CellValue?[rows, cols];
-		for (int r = 0; r < rows; r++)
+		var cells = new CellValue[rows, cols];
+		for (var r = 0; r < rows; r++)
 		{
-			for (int c = 0; c < cols; c++)
+			for (var c = 0; c < cols; c++)
 			{
 				if (c < parsed[r].Length && !string.IsNullOrEmpty(parsed[r][c]))
 				{
