@@ -29,15 +29,12 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	private enum HeaderEditKind
 	{
 		None,
-		Column,
-		Row
+		Column
 	}
 
 	private bool IsEditingHeader => _headerEditKind != HeaderEditKind.None;
 	private bool IsEditingColumnHeader(int col) =>
 		_isEditing && _headerEditKind == HeaderEditKind.Column && _headerEditIndex == col;
-	private bool IsEditingRowHeader(int row) =>
-		_isEditing && _headerEditKind == HeaderEditKind.Row && _headerEditIndex == row;
 	private bool _isSelecting;
 	private bool _isResizingCol;
 	private bool _isResizingRow;
@@ -617,12 +614,6 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			return;
 		}
 
-		// Keep focus in the header editor when clicking the header being edited.
-		if (IsEditingRowHeader(row))
-		{
-			return;
-		}
-
 		if (_isEditing)
 		{
 			CommitEdit();
@@ -676,7 +667,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 
 	private void BeginHeaderEdit(HeaderEditKind kind, int index, bool selectHeader = true)
 	{
-		if (kind == HeaderEditKind.None || index < 0)
+		if (kind != HeaderEditKind.Column || index < 0 || index >= Context.Model.ColumnCount)
 		{
 			return;
 		}
@@ -692,33 +683,12 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			CommitEdit();
 		}
 
-		if (kind == HeaderEditKind.Column)
+		if (selectHeader)
 		{
-			if (index >= Context.Model.ColumnCount)
-			{
-				return;
-			}
-
-			if (selectHeader)
-			{
-				Context.SelectColumn(index, extendSelection: false);
-			}
-			_editValue = Context.Model.ColumnHeaders[index];
-		}
-		else
-		{
-			if (index >= Context.Model.RowCount)
-			{
-				return;
-			}
-
-			if (selectHeader)
-			{
-				Context.SelectRow(index, extendSelection: false);
-			}
-			_editValue = Context.Model.RowHeaders[index];
+			Context.SelectColumn(index, extendSelection: false);
 		}
 
+		_editValue = Context.Model.ColumnHeaders[index];
 		_headerEditKind = kind;
 		_headerEditIndex = index;
 		_editPos = CellPosition.Invalid;
@@ -746,10 +716,6 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			if (_headerEditKind == HeaderEditKind.Column)
 			{
 				Context.SetColumnHeader(_headerEditIndex, _editValue);
-			}
-			else if (_headerEditKind == HeaderEditKind.Row)
-			{
-				Context.SetRowHeader(_headerEditIndex, _editValue);
 			}
 
 			ClearEditState();
@@ -826,20 +792,12 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	{
 		if (e.Key == "Enter")
 		{
-			var kind = _headerEditKind;
 			var index = _headerEditIndex;
 			var value = _editValue;
 			_suppressBlurCommit = true;
-			if (_isEditing && IsEditingHeader)
+			if (_isEditing && IsEditingHeader && _headerEditKind == HeaderEditKind.Column)
 			{
-				if (kind == HeaderEditKind.Column)
-				{
-					Context.SetColumnHeader(index, value);
-				}
-				else if (kind == HeaderEditKind.Row)
-				{
-					Context.SetRowHeader(index, value);
-				}
+				Context.SetColumnHeader(index, value);
 			}
 
 			ClearEditState();
@@ -852,32 +810,20 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		}
 		else if (e.Key == "Tab")
 		{
-			var kind = _headerEditKind;
 			var index = _headerEditIndex;
 			var value = _editValue;
 			_suppressBlurCommit = true;
-			if (_isEditing && IsEditingHeader)
+			if (_isEditing && IsEditingHeader && _headerEditKind == HeaderEditKind.Column)
 			{
-				if (kind == HeaderEditKind.Column)
-				{
-					Context.SetColumnHeader(index, value);
-				}
-				else if (kind == HeaderEditKind.Row)
-				{
-					Context.SetRowHeader(index, value);
-				}
+				Context.SetColumnHeader(index, value);
 			}
 
 			ClearEditState();
 
 			var next = index + (e.ShiftKey ? -1 : 1);
-			if (kind == HeaderEditKind.Column && next >= 0 && next < Context.Model.ColumnCount)
+			if (next >= 0 && next < Context.Model.ColumnCount)
 			{
 				BeginHeaderEdit(HeaderEditKind.Column, next);
-			}
-			else if (kind == HeaderEditKind.Row && next >= 0 && next < Context.Model.RowCount)
-			{
-				BeginHeaderEdit(HeaderEditKind.Row, next);
 			}
 			else
 			{
@@ -1016,7 +962,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		StateHasChanged();
 	}
 
-	private bool CanRenameHeader => _contextHeaderKind != HeaderEditKind.None;
+	private bool CanRenameHeader => _contextHeaderKind == HeaderEditKind.Column;
 
 	private void ContextRenameHeader()
 	{
@@ -1026,11 +972,10 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			return;
 		}
 
-		var kind = _contextHeaderKind;
-		var index = kind == HeaderEditKind.Column ? _contextCol : _contextRow;
+		var index = _contextCol;
 		_contextMenuOpen = false;
 		_contextHeaderKind = HeaderEditKind.None;
-		BeginHeaderEdit(kind, index, selectHeader: false);
+		BeginHeaderEdit(HeaderEditKind.Column, index, selectHeader: false);
 	}
 
 	private bool CanDeleteRow => Context.Model.RowCount > 1;

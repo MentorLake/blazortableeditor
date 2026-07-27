@@ -115,9 +115,8 @@
 							var height = Context.GetRowHeight(row);
 							var rowSelected = Context.IsRowHeaderSelected(row);
 							var rowPressed = _pressedRowHeader == row;
-							var editingRowHeader = IsEditingRowHeader(row);
 							<div
-								class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null) @(editingRowHeader ? "is-editing" : null)"
+								class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
 								role="button"
 								tabindex="-1"
 								data-row="@row"
@@ -125,26 +124,10 @@
 								@onmousedown="e => OnRowHeaderMouseDown(row, e)"
 								@onmouseup="OnHeaderMouseUp"
 								@onmouseleave="OnHeaderMouseUp"
-								@ondblclick="() => BeginHeaderEdit(HeaderEditKind.Row, row)"
-								@oncontextmenu="e => OpenContextMenu(e, row, 0, selectCell: false, headerKind: HeaderEditKind.Row)"
+								@oncontextmenu="e => OpenContextMenu(e, row, 0, selectCell: false)"
 								@oncontextmenu:preventDefault="true"
 								@oncontextmenu:stopPropagation="true">
-								@if (editingRowHeader)
-								{
-									<input @ref="_headerEditorRef"
-									       class="bte-header-editor"
-									       @bind="_editValue"
-									       @bind:event="oninput"
-									       @onkeydown="OnHeaderEditorKeyDown"
-									       @onkeydown:stopPropagation="true"
-									       @onmousedown:stopPropagation="true"
-									       @ondblclick:stopPropagation="true"
-									       @onblur="CommitEdit"/>
-								}
-								else
-								{
-									<span class="bte-header-label">@Context.Model.RowHeaders[row]</span>
-								}
+								<span class="bte-header-label">@(row + 1)</span>
 								<div class="bte-resize-row"></div>
 							</div>
 						}

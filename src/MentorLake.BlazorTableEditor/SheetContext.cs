@@ -355,30 +355,6 @@ public class SheetContext
 		NotifyStateChanged();
 	}
 
-	public void SetRowHeader(int row, string? header)
-	{
-		if (row < 0 || row >= Model.RowCount)
-		{
-			return;
-		}
-
-		var value = header?.Trim() ?? string.Empty;
-		if (string.IsNullOrEmpty(value))
-		{
-			value = (row + 1).ToString();
-		}
-
-		if (Model.RowHeaders[row] == value)
-		{
-			return;
-		}
-
-		PushUndoSnapshot();
-		Model.RowHeaders[row] = value;
-		NotifyDataChanged();
-		NotifyStateChanged();
-	}
-
 	public void SetActiveCell(int row, int col, bool extendSelection = false, bool notify = true)
 	{
 		if (Model.RowCount == 0 || Model.ColumnCount == 0)
