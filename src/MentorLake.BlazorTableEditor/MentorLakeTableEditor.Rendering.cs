@@ -1,5 +1,3 @@
-using MentorLake.BlazorTableEditor.Models;
-using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
@@ -32,45 +30,6 @@ public partial class MentorLakeTableEditor
 
 			await InvokeAsync(StateHasChanged);
 		}
-	}
-
-	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode, bool hasError = false)
-	{
-		var css = "bte-cell";
-		if (isActive) css += " is-active";
-		if (isSelected) css += " is-selected";
-		if (inFill) css += " is-fill";
-		if (inClipboard && mode == ClipboardVisualMode.Copy) css += " is-copied";
-		if (inClipboard && mode == ClipboardVisualMode.Cut) css += " is-cut";
-		if (hasError) css += " is-error";
-		return css;
-	}
-
-
-	private static string BuildCellStyle(int left, int top, int width, int height, CellValue cell)
-	{
-		var style = $"left:{left}px;top:{top}px;width:{width}px;height:{height}px;";
-		if (!string.IsNullOrEmpty(cell?.BackgroundColor) && cell!.BackgroundColor != "#ffffff")
-		{
-			style += $"background:{cell.BackgroundColor};";
-		}
-
-		if (!string.IsNullOrEmpty(cell?.TextColor) && cell!.TextColor != "#000000")
-		{
-			style += $"color:{cell.TextColor};";
-		}
-
-		return style;
-	}
-
-	private string GetRegionBox(CellRegion region)
-	{
-		var s = region.Normalize();
-		var left = Context.GetColumnLeft(s.StartCol);
-		var top = Context.GetRowTop(s.StartRow);
-		var right = Context.GetColumnLeft(s.EndCol) + Context.GetColumnWidth(s.EndCol);
-		var bottom = Context.GetRowTop(s.EndRow) + Context.GetRowHeight(s.EndRow);
-		return $"left:{left}px;top:{top}px;width:{right - left}px;height:{bottom - top}px;";
 	}
 
 	private void RecomputeVisibleRange()

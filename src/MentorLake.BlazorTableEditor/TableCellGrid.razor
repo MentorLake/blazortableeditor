@@ -1,0 +1,56 @@
+@using MentorLake.BlazorTableEditor.Models
+
+<div class="bte-cell-track"
+     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Sheet.GetTotalWidth()}px;height:{Sheet.GetTotalHeight()}px;")">
+	@for (int r = FirstRow; r <= LastRow; r++)
+	{
+		var row = r;
+		var top = Sheet.GetRowTop(row);
+		var height = Sheet.GetRowHeight(row);
+
+		for (int c = FirstCol; c <= LastCol; c++)
+		{
+			var col = c;
+			var left = Sheet.GetColumnLeft(col);
+			var width = Sheet.GetColumnWidth(col);
+			var isActive = Sheet.IsActive(row, col);
+			var isSelected = Sheet.IsSelected(row, col);
+			var inFill = Sheet.DragFillPreview?.Contains(new CellPosition(row, col)) == true
+			             && !Sheet.IsSelected(row, col);
+			var inClipboard = IsInClipboardSource(row, col);
+			var hasError = Sheet.HasError(row, col);
+			var cell = Sheet.GetValue(row, col);
+			var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, ClipboardMode, hasError);
+			var style = BuildCellStyle(left, top, width, height, cell);
+			var title = hasError ? Sheet.GetError(row, col) : null;
+
+			<div class="@css"
+			     style="@style"
+			     title="@title"
+			     data-row="@row"
+			     data-col="@col"
+			     @onmousedown="e => OnCellMouseDownAsync(row, col, e)"
+			     @onmouseenter="() => OnCellMouseEnterAsync(row, col)"
+			     @ondblclick="() => OnDoubleClickAsync(row, col)"
+			     @oncontextmenu="e => OnContextMenuAsync(row, col, e)"
+			     @oncontextmenu:preventDefault="true"
+			     @oncontextmenu:stopPropagation="true">
+				@Sheet.GetCellDisplay(row, col)
+			</div>
+		}
+	}
+
+	@if (Sheet.IsDragFilling && Sheet.DragFillPreview is { } fill)
+	{
+		<div class="bte-fill-preview" style="@GetRegionBox(fill)"></div>
+	}
+
+	@if (ClipboardSource is { } clipSrc && ClipboardMode != ClipboardVisualMode.None)
+	{
+		<div class="@GetClipboardOverlayClass()" style="@GetRegionBox(clipSrc)" aria-hidden="true">
+			<span class="bte-clipboard-badge">@GetClipboardBadgeText()</span>
+		</div>
+	}
+
+	@ChildContent
+</div>

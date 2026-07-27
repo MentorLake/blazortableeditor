@@ -62,60 +62,19 @@
 					                 OnHeaderMouseUp="OnHeaderMouseUp"
 					                 OnContextMenu="OnRowHeaderContextMenu" />
 
-					<div class="bte-cell-track"
-					     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Context.GetTotalWidth()}px;height:{Context.GetTotalHeight()}px;")">
-						@for (int r = _firstRow; r <= _lastRow; r++)
-						{
-							var row = r;
-							var top = Context.GetRowTop(row);
-							var height = Context.GetRowHeight(row);
-
-							for (int c = _firstCol; c <= _lastCol; c++)
-							{
-								var col = c;
-								var left = Context.GetColumnLeft(col);
-								var width = Context.GetColumnWidth(col);
-								var isActive = Context.IsActive(row, col);
-								var isSelected = Context.IsSelected(row, col);
-								var inFill = Context.DragFillPreview?.Contains(new CellPosition(row, col)) == true
-								             && !Context.IsSelected(row, col);
-								var inClipboard = IsInClipboardSource(row, col);
-								var hasError = Context.HasError(row, col);
-								var cell = Context.GetValue(row, col);
-								var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, _clipboardMode, hasError);
-								var style = BuildCellStyle(left, top, width, height, cell);
-								var title = hasError ? Context.GetError(row, col) : null;
-
-								<div class="@css"
-								     style="@style"
-								     title="@title"
-								     data-row="@row"
-								     data-col="@col"
-								     @onmousedown="e => OnCellMouseDown(row, col, e)"
-								     @onmouseenter="() => OnCellMouseEnter(row, col)"
-								     @ondblclick="() => BeginEdit(row, col)"
-								     @oncontextmenu="e => OpenContextMenu(e, row, col)"
-								     @oncontextmenu:preventDefault="true"
-								     @oncontextmenu:stopPropagation="true">
-									@Context.GetCellDisplay(row, col)
-								</div>
-							}
-						}
-
+					<TableCellGrid Sheet="Context"
+					               FirstRow="_firstRow"
+					               LastRow="_lastRow"
+					               FirstCol="_firstCol"
+					               LastCol="_lastCol"
+					               ClipboardSource="_clipboardSource"
+					               ClipboardMode="_clipboardMode"
+					               OnCellMouseDown="OnCellMouseDownFromChild"
+					               OnCellMouseEnter="OnCellMouseEnterFromChild"
+					               OnDoubleClick="OnCellDoubleClickFromChild"
+					               OnContextMenu="OnCellContextMenuFromChild">
 						<TableSelectionOverlay Sheet="Context"
 						                       OnFillHandleMouseDown="OnFillHandleMouseDown" />
-
-						@if (Context.IsDragFilling && Context.DragFillPreview is { } fill)
-						{
-							<div class="bte-fill-preview" style="@GetRegionBox(fill)"></div>
-						}
-
-						@if (_clipboardSource is { } clipSrc && _clipboardMode != ClipboardVisualMode.None)
-						{
-							<div class="@GetClipboardOverlayClass()" style="@GetRegionBox(clipSrc)" aria-hidden="true">
-								<span class="bte-clipboard-badge">@GetClipboardBadgeText()</span>
-							</div>
-						}
 
 						<TableCellEditor Sheet="Context"
 						                 IsEditing="_isEditing && !IsEditingHeader"
@@ -123,7 +82,7 @@
 						                 @bind-Value="_editValue"
 						                 OnCommit="CommitEdit"
 						                 OnKeyDown="OnEditorKeyDown" />
-					</div>
+					</TableCellGrid>
 				</div>
 			</div>
 		</div>

@@ -9,24 +9,6 @@ public partial class MentorLakeTableEditor
 	private CellRegion? _clipboardSource;
 	private ClipboardVisualMode _clipboardMode = ClipboardVisualMode.None;
 
-	private enum ClipboardVisualMode
-	{
-		None,
-		Copy,
-		Cut
-	}
-
-	private bool IsInClipboardSource(int row, int col) =>
-		_clipboardSource?.Contains(new CellPosition(row, col)) == true;
-
-	private string GetClipboardOverlayClass() =>
-		_clipboardMode == ClipboardVisualMode.Cut
-			? "bte-clipboard-source is-cut"
-			: "bte-clipboard-source is-copy";
-
-	private string GetClipboardBadgeText() =>
-		_clipboardMode == ClipboardVisualMode.Cut ? "CUT" : "COPIED";
-
 	private void SetClipboardVisual(CellRegion region, ClipboardVisualMode mode)
 	{
 		_clipboardSource = region.Normalize();

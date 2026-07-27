@@ -40,6 +40,18 @@ public partial class MentorLakeTableEditor
 	private void OnRowHeaderContextMenu((int Row, MouseEventArgs Mouse) args) =>
 		OpenContextMenu(args.Mouse, args.Row, 0, selectCell: false);
 
+	private void OnCellMouseDownFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
+		OnCellMouseDown(args.Row, args.Col, args.Mouse);
+
+	private void OnCellMouseEnterFromChild((int Row, int Col) args) =>
+		OnCellMouseEnter(args.Row, args.Col);
+
+	private void OnCellDoubleClickFromChild((int Row, int Col) args) =>
+		BeginEdit(args.Row, args.Col);
+
+	private void OnCellContextMenuFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
+		OpenContextMenu(args.Mouse, args.Row, args.Col);
+
 	private void BeginEdit(int row, int col)
 	{
 		if (IsEditingHeader)
