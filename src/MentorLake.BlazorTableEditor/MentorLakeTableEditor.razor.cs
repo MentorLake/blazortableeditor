@@ -101,19 +101,27 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			try
 			{
 				await _instance.InvokeVoidAsync("dispose");
+				await _instance.DisposeAsync();
 			}
 			catch (JSDisconnectedException)
 			{
 
 			}
 
-			await _instance.DisposeAsync();
 			_instance = null;
 		}
 
 		if (_module is not null)
 		{
-			await _module.DisposeAsync();
+			try
+			{
+				await _module.DisposeAsync();
+			}
+			catch (JSDisconnectedException)
+			{
+
+			}
+
 			_module = null;
 		}
 	}
