@@ -486,3 +486,16 @@ version.json
 global.json
 LICENSE.md
 MentorLake.BlazorTableEditor.Demo/
+
+# Block binary and build folders completely
+**/bin/
+**/obj/
+**/.git/
+**/.vs/
+**/.vscode/
+**/.idea/
+**/.junie/
+
+# Block dependency tracking files
+**/node_modules/
+**/*.user

@@ -32,17 +32,6 @@ public partial class MentorLakeTableEditor
 
 			await InvokeAsync(StateHasChanged);
 		}
-
-		if (_isEditing && IsEditingHeader)
-		{
-			try
-			{
-				await _headerEditorRef.FocusAsync();
-			}
-			catch
-			{
-			}
-		}
 	}
 
 	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode, bool hasError = false)

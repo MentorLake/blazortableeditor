@@ -1,0 +1,50 @@
+@using MentorLake.BlazorTableEditor.Models
+
+<div class="bte-header-row"
+     style="@($"height:{SheetContext.ColumnHeaderHeight}px;width:{SheetContext.RowHeaderWidth + Sheet.GetTotalWidth()}px;")">
+	<div class="bte-corner"
+	     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{SheetContext.ColumnHeaderHeight}px;")"></div>
+	<div class="bte-col-track"
+	     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Sheet.GetTotalWidth()}px;height:{SheetContext.ColumnHeaderHeight}px;")">
+		@for (int c = FirstCol; c <= LastCol; c++)
+		{
+			var col = c;
+			var left = Sheet.GetColumnLeft(col);
+			var width = Sheet.GetColumnWidth(col);
+			var colSelected = Sheet.IsColumnHeaderSelected(col);
+			var colPressed = PressedColHeader == col;
+			var editingColHeader = IsEditingColumn(col);
+			<div
+				class="bte-col-header @(colSelected ? "is-selected" : null) @(colPressed ? "is-pressed" : null) @(editingColHeader ? "is-editing" : null)"
+				role="button"
+				tabindex="-1"
+				data-col="@col"
+				style="@($"left:{left}px;width:{width}px;height:{SheetContext.ColumnHeaderHeight}px;")"
+				@onmousedown="e => OnColMouseDownAsync(col, e)"
+				@onmouseup="OnHeaderMouseUpAsync"
+				@onmouseleave="OnHeaderMouseUpAsync"
+				@ondblclick="() => OnDoubleClickAsync(col)"
+				@oncontextmenu="e => OnContextMenuAsync(col, e)"
+				@oncontextmenu:preventDefault="true"
+				@oncontextmenu:stopPropagation="true">
+				@if (editingColHeader)
+				{
+					<input @ref="_headerEditorRef"
+					       class="bte-header-editor"
+					       value="@EditValue"
+					       @oninput="OnEditInputAsync"
+					       @onkeydown="OnEditorKeyDownAsync"
+					       @onkeydown:stopPropagation="true"
+					       @onmousedown:stopPropagation="true"
+					       @ondblclick:stopPropagation="true"
+					       @onblur="OnCommitAsync"/>
+				}
+				else
+				{
+					<span class="bte-header-label">@Sheet.Model.ColumnHeaders[col]</span>
+				}
+				<div class="bte-resize-col"></div>
+			</div>
+		}
+	</div>
+</div>

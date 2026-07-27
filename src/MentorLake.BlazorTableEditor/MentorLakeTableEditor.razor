@@ -39,83 +39,28 @@
 			     @onmousemove="OnCanvasMouseMove"
 			     @onmouseup="OnGlobalMouseUp">
 
-				<div class="bte-header-row"
-				     style="@($"height:{SheetContext.ColumnHeaderHeight}px;width:{SheetContext.RowHeaderWidth + Context.GetTotalWidth()}px;")">
-					<div class="bte-corner"
-					     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{SheetContext.ColumnHeaderHeight}px;")"></div>
-					<div class="bte-col-track"
-					     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Context.GetTotalWidth()}px;height:{SheetContext.ColumnHeaderHeight}px;")">
-						@for (int c = _firstCol; c <= _lastCol; c++)
-						{
-							var col = c;
-							var left = Context.GetColumnLeft(col);
-							var width = Context.GetColumnWidth(col);
-							var colSelected = Context.IsColumnHeaderSelected(col);
-							var colPressed = _pressedColHeader == col;
-							var editingColHeader = IsEditingColumnHeader(col);
-							<div
-								class="bte-col-header @(colSelected ? "is-selected" : null) @(colPressed ? "is-pressed" : null) @(editingColHeader ? "is-editing" : null)"
-								role="button"
-								tabindex="-1"
-								data-col="@col"
-								style="@($"left:{left}px;width:{width}px;height:{SheetContext.ColumnHeaderHeight}px;")"
-								@onmousedown="e => OnColHeaderMouseDown(col, e)"
-								@onmouseup="OnHeaderMouseUp"
-								@onmouseleave="OnHeaderMouseUp"
-								@ondblclick="() => BeginHeaderEdit(HeaderEditKind.Column, col)"
-								@oncontextmenu="e => OpenContextMenu(e, 0, col, selectCell: false, headerKind: HeaderEditKind.Column)"
-								@oncontextmenu:preventDefault="true"
-								@oncontextmenu:stopPropagation="true">
-								@if (editingColHeader)
-								{
-									<input @ref="_headerEditorRef"
-									       class="bte-header-editor"
-									       @bind="_editValue"
-									       @bind:event="oninput"
-									       @onkeydown="OnHeaderEditorKeyDown"
-									       @onkeydown:stopPropagation="true"
-									       @onmousedown:stopPropagation="true"
-									       @ondblclick:stopPropagation="true"
-									       @onblur="CommitEdit"/>
-								}
-								else
-								{
-									<span class="bte-header-label">@Context.Model.ColumnHeaders[col]</span>
-								}
-								<div class="bte-resize-col"></div>
-							</div>
-						}
-					</div>
-				</div>
+				<TableColumnHeaders Sheet="Context"
+				                    FirstCol="_firstCol"
+				                    LastCol="_lastCol"
+				                    PressedColHeader="_pressedColHeader"
+				                    EditingColumnIndex="@(IsEditingColumnHeaderActive() ? _headerEditIndex : null)"
+				                    @bind-EditValue="_editValue"
+				                    OnColMouseDown="OnColHeaderMouseDownFromChild"
+				                    OnHeaderMouseUp="OnHeaderMouseUp"
+				                    OnDoubleClick="OnColHeaderDoubleClick"
+				                    OnContextMenu="OnColHeaderContextMenu"
+				                    OnCommit="CommitEdit"
+				                    OnKeyDown="OnHeaderEditorKeyDown" />
 
 				<div class="bte-body-area"
 				     style="@($"height:{Context.GetTotalHeight()}px;width:{SheetContext.RowHeaderWidth + Context.GetTotalWidth()}px;")">
-					<div class="bte-row-track"
-					     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{Context.GetTotalHeight()}px;")">
-						@for (int r = _firstRow; r <= _lastRow; r++)
-						{
-							var row = r;
-							var top = Context.GetRowTop(row);
-							var height = Context.GetRowHeight(row);
-							var rowSelected = Context.IsRowHeaderSelected(row);
-							var rowPressed = _pressedRowHeader == row;
-							<div
-								class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
-								role="button"
-								tabindex="-1"
-								data-row="@row"
-								style="@($"top:{top}px;height:{height}px;width:{SheetContext.RowHeaderWidth}px;line-height:{height}px;")"
-								@onmousedown="e => OnRowHeaderMouseDown(row, e)"
-								@onmouseup="OnHeaderMouseUp"
-								@onmouseleave="OnHeaderMouseUp"
-								@oncontextmenu="e => OpenContextMenu(e, row, 0, selectCell: false)"
-								@oncontextmenu:preventDefault="true"
-								@oncontextmenu:stopPropagation="true">
-								<span class="bte-header-label">@(row + 1)</span>
-								<div class="bte-resize-row"></div>
-							</div>
-						}
-					</div>
+					<TableRowHeaders Sheet="Context"
+					                 FirstRow="_firstRow"
+					                 LastRow="_lastRow"
+					                 PressedRowHeader="_pressedRowHeader"
+					                 OnRowMouseDown="OnRowHeaderMouseDownFromChild"
+					                 OnHeaderMouseUp="OnHeaderMouseUp"
+					                 OnContextMenu="OnRowHeaderContextMenu" />
 
 					<div class="bte-cell-track"
 					     style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Context.GetTotalWidth()}px;height:{Context.GetTotalHeight()}px;")">

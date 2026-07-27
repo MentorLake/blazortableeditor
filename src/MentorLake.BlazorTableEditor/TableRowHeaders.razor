@@ -1,0 +1,28 @@
+@using MentorLake.BlazorTableEditor.Models
+
+<div class="bte-row-track"
+     style="@($"width:{SheetContext.RowHeaderWidth}px;height:{Sheet.GetTotalHeight()}px;")">
+	@for (int r = FirstRow; r <= LastRow; r++)
+	{
+		var row = r;
+		var top = Sheet.GetRowTop(row);
+		var height = Sheet.GetRowHeight(row);
+		var rowSelected = Sheet.IsRowHeaderSelected(row);
+		var rowPressed = PressedRowHeader == row;
+		<div
+			class="bte-row-header @(rowSelected ? "is-selected" : null) @(rowPressed ? "is-pressed" : null)"
+			role="button"
+			tabindex="-1"
+			data-row="@row"
+			style="@($"top:{top}px;height:{height}px;width:{SheetContext.RowHeaderWidth}px;line-height:{height}px;")"
+			@onmousedown="e => OnRowMouseDownAsync(row, e)"
+			@onmouseup="OnHeaderMouseUpAsync"
+			@onmouseleave="OnHeaderMouseUpAsync"
+			@oncontextmenu="e => OnContextMenuAsync(row, e)"
+			@oncontextmenu:preventDefault="true"
+			@oncontextmenu:stopPropagation="true">
+			<span class="bte-header-label">@(row + 1)</span>
+			<div class="bte-resize-row"></div>
+		</div>
+	}
+</div>

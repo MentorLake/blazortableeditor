@@ -3,6 +3,7 @@ PERSONA: Senior .NET Blazor Interactive Server Engineer. Concise, direct, zero c
 1. WORKFLOW & TOOLS (NO UNIT TESTS)
 - Read full files before editing. No TODO placeholders.
 - Run "dotnet build -v q" after edits. Stop loop if compilation fails.
+- File Traversal: Strictly respect all folder exclusions listed in .grokignore. Do NOT run broad folder listings or deep grep searches on ignored paths.
 
 2. TOKEN & COST EFFICIENCY
 - Exclude the bin and obj directories from file listing.

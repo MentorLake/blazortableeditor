@@ -20,8 +20,25 @@ public partial class MentorLakeTableEditor
 	}
 
 	private bool IsEditingHeader => _headerEditKind != HeaderEditKind.None;
+	private bool IsEditingColumnHeaderActive() =>
+		_isEditing && _headerEditKind == HeaderEditKind.Column && _headerEditIndex >= 0;
 	private bool IsEditingColumnHeader(int col) =>
-		_isEditing && _headerEditKind == HeaderEditKind.Column && _headerEditIndex == col;
+		IsEditingColumnHeaderActive() && _headerEditIndex == col;
+
+	private void OnColHeaderDoubleClick(int col) =>
+		BeginHeaderEdit(HeaderEditKind.Column, col);
+
+	private void OnColHeaderMouseDownFromChild((int Col, MouseEventArgs Mouse) args) =>
+		OnColHeaderMouseDown(args.Col, args.Mouse);
+
+	private void OnColHeaderContextMenu((int Col, MouseEventArgs Mouse) args) =>
+		OpenContextMenu(args.Mouse, 0, args.Col, selectCell: false, headerKind: HeaderEditKind.Column);
+
+	private void OnRowHeaderMouseDownFromChild((int Row, MouseEventArgs Mouse) args) =>
+		OnRowHeaderMouseDown(args.Row, args.Mouse);
+
+	private void OnRowHeaderContextMenu((int Row, MouseEventArgs Mouse) args) =>
+		OpenContextMenu(args.Mouse, args.Row, 0, selectCell: false);
 
 	private void BeginEdit(int row, int col)
 	{
