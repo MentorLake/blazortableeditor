@@ -56,7 +56,7 @@ public partial class MentorLakeTableEditor
 				BeginEdit(Context.ActiveCell.Row, Context.ActiveCell.Col);
 				break;
 			case "Escape":
-				if (_contextMenuOpen)
+				if (IsContextMenuOpen)
 				{
 					CloseContextMenu();
 				}

@@ -4,12 +4,7 @@ namespace MentorLake.BlazorTableEditor;
 
 public partial class MentorLakeTableEditor
 {
-	private bool _contextMenuOpen;
-	private double _contextMenuX;
-	private double _contextMenuY;
-	private int _contextRow;
-	private int _contextCol;
-	private HeaderEditKind _contextHeaderKind = HeaderEditKind.None;
+	private TableContextMenu _contextMenu;
 
 	private void OnRootContextMenu(MouseEventArgs e)
 	{
@@ -25,105 +20,37 @@ public partial class MentorLakeTableEditor
 
 		row = Math.Clamp(row, 0, Math.Max(0, Context.Model.RowCount - 1));
 		col = Math.Clamp(col, 0, Math.Max(0, Context.Model.ColumnCount - 1));
-		_contextRow = row;
-		_contextCol = col;
-		_contextHeaderKind = headerKind;
 
 		if (selectCell && !Context.IsSelected(row, col))
 		{
 			Context.SetActiveCell(row, col);
 		}
 
-		_contextMenuX = e.ClientX;
-		_contextMenuY = e.ClientY;
-		_contextMenuOpen = true;
 		_isSelecting = false;
-		StateHasChanged();
+		_contextMenu.Open(e.ClientX, e.ClientY, row, col, allowRename: headerKind == HeaderEditKind.Column);
 	}
 
 	private void CloseContextMenu()
 	{
-		if (!_contextMenuOpen)
+		if (_contextMenu is not null)
 		{
-			return;
+			_contextMenu.Close();
 		}
-
-		_contextMenuOpen = false;
-		_contextHeaderKind = HeaderEditKind.None;
-		StateHasChanged();
 	}
 
-	private bool CanRenameHeader => _contextHeaderKind == HeaderEditKind.Column;
+	private bool IsContextMenuOpen => _contextMenu is not null && _contextMenu.IsOpen;
 
-	private void ContextRenameHeader()
+	private void OnContextMenuStructureChanged() => OnSheetStructureChanged();
+
+	private void OnToolbarStructureChanged() => OnSheetStructureChanged();
+
+	private void OnSheetStructureChanged()
 	{
-		if (!CanRenameHeader)
-		{
-			CloseContextMenu();
-			return;
-		}
+		RecomputeVisibleRange();
+	}
 
-		var index = _contextCol;
-		_contextMenuOpen = false;
-		_contextHeaderKind = HeaderEditKind.None;
+	private void OnContextMenuRenameColumn(int index)
+	{
 		BeginHeaderEdit(HeaderEditKind.Column, index, selectHeader: false);
 	}
-
-	private bool CanDeleteRow => Context.Model.RowCount > 1;
-	private bool CanDeleteColumn => Context.Model.ColumnCount > 1;
-
-	private void ContextInsertColLeft()
-	{
-		Context.InsertColumn(_contextCol);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextInsertColRight()
-	{
-		Context.InsertColumn(_contextCol + 1);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextDeleteColumn()
-	{
-		if (!CanDeleteColumn)
-		{
-			CloseContextMenu();
-			return;
-		}
-
-		Context.DeleteColumn(_contextCol);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextInsertRowAbove()
-	{
-		Context.InsertRow(_contextRow);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextInsertRowBelow()
-	{
-		Context.InsertRow(_contextRow + 1);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextDeleteRow()
-	{
-		if (!CanDeleteRow)
-		{
-			CloseContextMenu();
-			return;
-		}
-
-		Context.DeleteRow(_contextRow);
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
 }

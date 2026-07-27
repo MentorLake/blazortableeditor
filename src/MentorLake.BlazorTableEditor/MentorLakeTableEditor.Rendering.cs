@@ -91,17 +91,6 @@ public partial class MentorLakeTableEditor
 		return $"left:{left}px;top:{top}px;width:{right - left}px;height:{bottom - top}px;";
 	}
 
-	private string GetActiveColName()
-	{
-		var col = Context.ActiveCell.Col;
-		if (col >= 0 && col < Context.Model.ColumnHeaders.Count)
-		{
-			return Context.Model.ColumnHeaders[col];
-		}
-
-		return "?";
-	}
-
 	private void RecomputeVisibleRange()
 	{
 		var rowCount = Context.Model.RowCount;

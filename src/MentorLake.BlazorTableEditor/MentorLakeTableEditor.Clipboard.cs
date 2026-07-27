@@ -46,24 +46,6 @@ public partial class MentorLakeTableEditor
 		StateHasChanged();
 	}
 
-	private async Task ContextCutAsync()
-	{
-		CloseContextMenu();
-		await CutAsync();
-	}
-
-	private async Task ContextCopyAsync()
-	{
-		CloseContextMenu();
-		await CopyAsync();
-	}
-
-	private async Task ContextPasteAsync()
-	{
-		CloseContextMenu();
-		await PasteAsync();
-	}
-
 	private async Task CopyAsync()
 	{
 		var region = Context.GetEffectiveSelection();

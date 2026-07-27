@@ -1,0 +1,30 @@
+@using MentorLake.BlazorTableEditor.Models
+@using Microsoft.AspNetCore.Components.Forms
+
+<div class="bte-toolbar">
+	<button type="button" @onclick="UndoAsync" disabled="@(!Sheet.CanUndo)">Undo</button>
+	<button type="button" @onclick="RedoAsync" disabled="@(!Sheet.CanRedo)">Redo</button>
+	<button type="button" @onclick="CutAsync">Cut</button>
+	<button type="button" @onclick="CopyAsync">Copy</button>
+	<button type="button" @onclick="PasteAsync">Paste</button>
+	<button type="button" @onclick="InsertRowAtActive">Insert Row</button>
+	<button type="button" @onclick="DeleteRowAtActive">Delete Row</button>
+	<button type="button" @onclick="InsertColAtActive">Insert Col</button>
+	<button type="button" @onclick="DeleteColAtActive">Delete Col</button>
+	<button type="button" @onclick="ExportCsvAsync">Export CSV</button>
+	<button type="button" class="bte-file-btn" @onclick="ImportCsvAsync">Import CSV</button>
+	<InputFile id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelectedAsync"
+	           accept=".csv,text/csv"/>
+	<span class="bte-status">
+		@Sheet.Model.RowCount × @Sheet.Model.ColumnCount
+		| Active (@(Sheet.ActiveCell.Row + 1), @GetActiveColName())
+		@if (Sheet.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))
+		{
+			<text> | Sel @sel.Height×@sel.Width</text>
+		}
+		@if (!string.IsNullOrEmpty(CsvStatus))
+		{
+			<text> | @CsvStatus</text>
+		}
+	</span>
+</div>

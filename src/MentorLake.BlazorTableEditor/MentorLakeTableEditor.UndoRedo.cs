@@ -26,18 +26,4 @@ public partial class MentorLakeTableEditor
 		Redo();
 		await FocusRootAsync();
 	}
-
-	private void ContextUndo()
-	{
-		Context.Undo();
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
-
-	private void ContextRedo()
-	{
-		Context.Redo();
-		CloseContextMenu();
-		RecomputeVisibleRange();
-	}
 }

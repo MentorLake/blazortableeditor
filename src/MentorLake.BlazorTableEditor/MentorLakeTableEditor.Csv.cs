@@ -7,7 +7,6 @@ namespace MentorLake.BlazorTableEditor;
 public partial class MentorLakeTableEditor
 {
 
-	private InputFile _csvInput;
 	private string _csvStatus;
 
 	private async Task ExportCsvAsync()

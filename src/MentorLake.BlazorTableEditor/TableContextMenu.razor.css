@@ -1,0 +1,65 @@
+.bte-context-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	background: transparent;
+}
+
+.bte-context-menu {
+	position: fixed;
+	z-index: 1001;
+	min-width: 200px;
+	padding: 4px 0;
+	background: #fff;
+	border: 1px solid #c7c7c7;
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+	font-size: 13px;
+	color: #202124;
+	user-select: none;
+}
+
+.bte-context-item {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 24px;
+	width: 100%;
+	margin: 0;
+	padding: 7px 14px;
+	border: 0;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.bte-context-item:hover:not(:disabled) {
+	background: #e8f0fe;
+	color: #174ea6;
+}
+
+.bte-context-item:active:not(:disabled) {
+	background: #d2e3fc;
+}
+
+.bte-context-item:disabled {
+	color: #b0b0b0;
+	cursor: default;
+}
+
+.bte-context-shortcut {
+	color: #80868b;
+	font-size: 11px;
+}
+
+.bte-context-item:hover .bte-context-shortcut {
+	color: #174ea6;
+}
+
+.bte-context-separator {
+	height: 1px;
+	margin: 4px 0;
+	background: #e0e0e0;
+}

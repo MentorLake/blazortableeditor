@@ -37,7 +37,7 @@ public partial class MentorLakeTableEditor
 
 	private async Task OnViewportScroll(EventArgs _)
 	{
-		if (_contextMenuOpen)
+		if (IsContextMenuOpen)
 		{
 			CloseContextMenu();
 		}

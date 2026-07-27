@@ -1,0 +1,40 @@
+@if (IsOpen)
+{
+	<div class="bte-context-backdrop"
+	     @onmousedown="Close"
+	     @oncontextmenu="Close"
+	     @oncontextmenu:preventDefault="true"></div>
+	<div class="bte-context-menu"
+	     style="@($"left:{_x}px;top:{_y}px;")"
+	     @onmousedown:stopPropagation="true">
+		@if (_allowRename)
+		{
+			<button type="button" class="bte-context-item" @onclick="RenameHeaderAsync">Rename</button>
+			<div class="bte-context-separator"></div>
+		}
+		<button type="button" class="bte-context-item" @onclick="Undo" disabled="@(!Sheet.CanUndo)">Undo</button>
+		<button type="button" class="bte-context-item" @onclick="Redo" disabled="@(!Sheet.CanRedo)">Redo</button>
+		<div class="bte-context-separator"></div>
+		<button type="button" class="bte-context-item" @onclick="InsertColLeft">Insert column left</button>
+		<button type="button" class="bte-context-item" @onclick="InsertColRight">Insert column right</button>
+		<button type="button" class="bte-context-item" @onclick="DeleteColumn"
+		        disabled="@(!CanDeleteColumn)">Delete column
+		</button>
+		<div class="bte-context-separator"></div>
+		<button type="button" class="bte-context-item" @onclick="InsertRowAbove">Insert row above</button>
+		<button type="button" class="bte-context-item" @onclick="InsertRowBelow">Insert row below</button>
+		<button type="button" class="bte-context-item" @onclick="DeleteRow" disabled="@(!CanDeleteRow)">
+			Delete row
+		</button>
+		<div class="bte-context-separator"></div>
+		<button type="button" class="bte-context-item" @onclick="CutAsync">
+			<span>Cut</span><span class="bte-context-shortcut">Ctrl+X</span>
+		</button>
+		<button type="button" class="bte-context-item" @onclick="CopyAsync">
+			<span>Copy</span><span class="bte-context-shortcut">Ctrl+C</span>
+		</button>
+		<button type="button" class="bte-context-item" @onclick="PasteAsync">
+			<span>Paste</span><span class="bte-context-shortcut">Ctrl+V</span>
+		</button>
+	</div>
+}
