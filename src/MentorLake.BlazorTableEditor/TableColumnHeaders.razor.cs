@@ -18,6 +18,7 @@ public partial class TableColumnHeaders
 	[Parameter] public EventCallback<(int Col, MouseEventArgs Mouse)> OnContextMenu { get; set; }
 	[Parameter] public EventCallback OnCommit { get; set; }
 	[Parameter] public EventCallback<KeyboardEventArgs> OnKeyDown { get; set; }
+	[Parameter] public EventCallback<(int Col, MouseEventArgs Mouse)> OnFilterClick { get; set; }
 
 	private ElementReference _headerEditorRef;
 	private bool _shouldFocus;
@@ -84,4 +85,7 @@ public partial class TableColumnHeaders
 		OnKeyDown.InvokeAsync(e);
 
 	private Task OnCommitAsync() => OnCommit.InvokeAsync();
+
+	private Task OnFilterClickAsync(int col, MouseEventArgs e) =>
+		OnFilterClick.InvokeAsync((col, e));
 }

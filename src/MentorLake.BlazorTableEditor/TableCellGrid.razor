@@ -4,6 +4,11 @@
      style="@($"left:{SheetContext.RowHeaderWidth}px;width:{Sheet.GetTotalWidth()}px;height:{Sheet.GetTotalHeight()}px;")">
 	@for (int r = FirstRow; r <= LastRow; r++)
 	{
+		if (Sheet.IsRowHidden(r))
+		{
+			continue;
+		}
+
 		var row = r;
 		var top = Sheet.GetRowTop(row);
 		var height = Sheet.GetRowHeight(row);

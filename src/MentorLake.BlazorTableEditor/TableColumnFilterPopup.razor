@@ -1,0 +1,58 @@
+@if (IsOpen)
+{
+	<div class="bte-filter-backdrop"
+	     @onmousedown="Close"
+	     @oncontextmenu="Close"
+	     @oncontextmenu:preventDefault="true"></div>
+	<div class="bte-filter-popup"
+	     style="@($"left:{_x}px;top:{_y}px;")"
+	     @onmousedown:stopPropagation="true"
+	     @onclick:stopPropagation="true">
+		@if (_hasExistingFilter)
+		{
+			<button type="button" class="bte-filter-action" @onclick="ClearFilterAsync">Clear Filter From "@_columnTitle"</button>
+			<div class="bte-filter-separator"></div>
+		}
+
+		<div class="bte-filter-search">
+			<input type="text"
+			       class="bte-filter-search-input"
+			       placeholder="Search"
+			       value="@_searchText"
+			       @oninput="OnSearchInput"
+			       @onkeydown:stopPropagation="true"
+			       @onclick:stopPropagation="true"/>
+		</div>
+
+		<div class="bte-filter-list">
+			<label class="bte-filter-item bte-filter-select-all">
+				<input type="checkbox"
+				       checked="@_selectAllChecked"
+				       @onchange="OnSelectAllChanged"/>
+				<span>(Select All)</span>
+			</label>
+
+			@foreach (var value in VisibleValues)
+			{
+				var key = value;
+				var checkedState = _checked.Contains(key);
+				<label class="bte-filter-item">
+					<input type="checkbox"
+					       checked="@checkedState"
+					       @onchange="e => OnValueChanged(key, e)"/>
+					<span title="@GetDisplayLabel(key)">@GetDisplayLabel(key)</span>
+				</label>
+			}
+
+			@if (!VisibleValues.Any())
+			{
+				<div class="bte-filter-empty">No matches</div>
+			}
+		</div>
+
+		<div class="bte-filter-footer">
+			<button type="button" class="bte-filter-btn bte-filter-btn-primary" disabled="@(!CanApply)" @onclick="ApplyAsync">OK</button>
+			<button type="button" class="bte-filter-btn" @onclick="Close">Cancel</button>
+		</div>
+	</div>
+}

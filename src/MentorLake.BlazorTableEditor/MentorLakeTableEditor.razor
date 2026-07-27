@@ -49,6 +49,7 @@
 				                    OnHeaderMouseUp="OnHeaderMouseUp"
 				                    OnDoubleClick="OnColHeaderDoubleClick"
 				                    OnContextMenu="OnColHeaderContextMenu"
+				                    OnFilterClick="OnColFilterClick"
 				                    OnCommit="CommitEdit"
 				                    OnKeyDown="OnHeaderEditorKeyDown" />
 
@@ -95,4 +96,8 @@
 	                  OnCut="CutAsync"
 	                  OnCopy="CopyAsync"
 	                  OnPaste="PasteAsync" />
+
+	<TableColumnFilterPopup @ref="_filterPopup"
+	                        Sheet="Context"
+	                        OnFilterChanged="OnFilterChanged" />
 </div>

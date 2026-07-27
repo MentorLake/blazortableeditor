@@ -2,8 +2,15 @@ namespace MentorLake.BlazorTableEditor;
 
 public partial class SheetContext
 {
-	public int GetRowHeight(int row) =>
-		RowHeights.TryGetValue(row, out var h) ? h : DefaultRowHeight;
+	public int GetRowHeight(int row)
+	{
+		if (IsRowHidden(row))
+		{
+			return 0;
+		}
+
+		return RowHeights.TryGetValue(row, out var h) ? h : DefaultRowHeight;
+	}
 
 	public int GetColumnWidth(int col) =>
 		ColumnWidths.TryGetValue(col, out var w) ? w : DefaultColumnWidth;

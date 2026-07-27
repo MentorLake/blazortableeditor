@@ -11,6 +11,7 @@
 	<p class="bte-lead">
 		Click a cell to select. Drag to multi-select. Double-click or press Enter/F2 to edit.
 		Arrow keys move the active cell; Shift+Arrow expands selection. Drag the fill handle to copy values.
+		Use the filter button on a column header for Excel-style value filters.
 		Use <strong>Export CSV</strong> / <strong>Import CSV</strong> in the toolbar to save or load spreadsheet data.
 	</p>
 
@@ -21,7 +22,7 @@
 		<div style="height: 600px; width: 1000px;">
 			<MentorLake.BlazorTableEditor.MentorLakeTableEditor
 				Validator="_validator"
-				Model="@(new TableDataModel(100, 104))"/>
+				Model="@(new TableDataModel(100, 5))"/>
 		</div>
 	}
 </div>

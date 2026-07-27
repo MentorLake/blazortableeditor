@@ -47,6 +47,7 @@ public partial class SheetContext
 	public void NotifyStateChanged() => StateChanged?.Invoke();
 	public void NotifyDataChanged()
 	{
+		RecomputeHiddenRows();
 		RevalidateInternal();
 		DataChanged?.Invoke();
 	}

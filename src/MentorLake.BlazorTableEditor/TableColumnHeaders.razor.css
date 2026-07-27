@@ -50,11 +50,12 @@
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	justify-content: center;
+	justify-content: flex-start;
+	padding-right: 2px;
 	border-right: 1px solid #cfcfcf;
 	border-bottom: 1px solid #9e9e9e;
 	background: linear-gradient(#fafafa, #eceff1);
-	text-align: center;
+	text-align: left;
 	font-weight: 600;
 	color: #333;
 	overflow: hidden;
@@ -82,11 +83,58 @@
 .bte-header-label {
 	pointer-events: none;
 	display: block;
-	width: 100%;
+	flex: 1 1 auto;
+	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
-	padding: 0 4px;
+	padding: 0 2px 0 6px;
+	text-align: left;
+}
+
+.bte-filter-btn-header {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+	margin: 0 4px 0 0;
+	padding: 0;
+	border: 0;
+	border-radius: 3px;
+	background: transparent;
+	color: #5f6368;
+	cursor: pointer;
+	opacity: 0;
+	transition: opacity 0.12s ease, background 0.12s ease, color 0.12s ease;
+}
+
+.bte-col-header:hover .bte-filter-btn-header,
+.bte-col-header.is-selected .bte-filter-btn-header,
+.bte-filter-btn-header.is-active {
+	opacity: 1;
+}
+
+.bte-filter-btn-header:hover {
+	background: rgba(26, 115, 232, 0.16);
+	color: #174ea6;
+}
+
+.bte-filter-btn-header.is-active {
+	color: #0b57d0;
+	background: rgba(26, 115, 232, 0.14);
+}
+
+.bte-filter-icon {
+	width: 16px;
+	height: 16px;
+	display: block;
+	fill: currentColor;
+}
+
+.bte-col-header.is-filtered {
+	color: #174ea6;
 }
 
 .bte-col-header.is-editing {
@@ -106,7 +154,7 @@
 	outline: none;
 	font: inherit;
 	font-weight: 600;
-	text-align: center;
+	text-align: left;
 	color: #174ea6;
 	background: #fff;
 	min-width: 0;

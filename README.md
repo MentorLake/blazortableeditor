@@ -14,6 +14,7 @@ An AI-generated high-performance, Excel-like table editor component library for 
 - **JSON serialization** — `TableDataModel.ToJson` / `FromJson`.
 - **Context menu** — Right-click for insert/delete row/column + clipboard actions.
 - **Header selection** — Click column header to select whole column, row number to select whole row.
+- **Column filters** — Excel-style AutoFilter on column headers (search, select-all, multi-value checkboxes, multi-column AND).
 - **Styling** — Button-like headers, selection highlighting, fill preview, marching ants clipboard indicator.
 
 ## Installation

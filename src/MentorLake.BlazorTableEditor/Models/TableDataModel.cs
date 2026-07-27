@@ -17,12 +17,12 @@ public class TableDataModel
 
 	public TableDataModel(int rows = 100, int cols = 26)
 	{
-		for (int c = 0; c < cols; c++)
+		for (var c = 0; c < cols; c++)
 		{
 			ColumnHeaders.Add(GetColumnLetter(c));
 		}
 
-		for (int r = 0; r < rows; r++)
+		for (var r = 0; r < rows; r++)
 		{
 			RowHeaders.Add((r + 1).ToString());
 		}
@@ -30,8 +30,8 @@ public class TableDataModel
 
 	private static string GetColumnLetter(int col)
 	{
-		string letter = "";
-		int index = col;
+		var letter = "";
+		var index = col;
 		while (index >= 0)
 		{
 			letter = (char)('A' + (index % 26)) + letter;
@@ -84,13 +84,13 @@ public class TableDataModel
 	public string ToCsv(bool includeHeaders = true)
 	{
 		var (maxRow, maxCol) = GetUsedBounds();
-		int rows = Math.Max(maxRow + 1, 1);
-		int cols = Math.Max(Math.Max(maxCol + 1, ColumnHeaders.Count), 1);
+		var rows = Math.Max(maxRow + 1, 1);
+		var cols = Math.Max(Math.Max(maxCol + 1, ColumnHeaders.Count), 1);
 
 		var sb = new StringBuilder();
 		if (includeHeaders)
 		{
-			for (int c = 0; c < cols; c++)
+			for (var c = 0; c < cols; c++)
 			{
 				if (c > 0) sb.Append(',');
 				var header = c < ColumnHeaders.Count ? ColumnHeaders[c] : GetColumnLetter(c);
@@ -100,9 +100,9 @@ public class TableDataModel
 			sb.AppendLine();
 		}
 
-		for (int r = 0; r < rows; r++)
+		for (var r = 0; r < rows; r++)
 		{
-			for (int c = 0; c < cols; c++)
+			for (var c = 0; c < cols; c++)
 			{
 				if (c > 0) sb.Append(',');
 				var cell = GetCell(r, c);
@@ -131,9 +131,9 @@ public class TableDataModel
 			return new TableDataModel(10, 5);
 		}
 
-		int headerOffset = firstRowIsHeader ? 1 : 0;
-		int dataRowCount = Math.Max(rows.Count - headerOffset, 1);
-		int colCount = rows.Max(r => r.Count);
+		var headerOffset = firstRowIsHeader ? 1 : 0;
+		var dataRowCount = Math.Max(rows.Count - headerOffset, 1);
+		var colCount = rows.Max(r => r.Count);
 		colCount = Math.Max(colCount, 1);
 
 		var model = new TableDataModel(dataRowCount, colCount);
@@ -142,7 +142,7 @@ public class TableDataModel
 		if (firstRowIsHeader)
 		{
 			var headers = rows[0];
-			for (int c = 0; c < colCount; c++)
+			for (var c = 0; c < colCount; c++)
 			{
 				model.ColumnHeaders[c] = c < headers.Count && !string.IsNullOrWhiteSpace(headers[c])
 					? headers[c]
@@ -150,16 +150,16 @@ public class TableDataModel
 			}
 		}
 
-		for (int r = 0; r < dataRowCount; r++)
+		for (var r = 0; r < dataRowCount; r++)
 		{
-			int sourceRow = r + headerOffset;
+			var sourceRow = r + headerOffset;
 			if (sourceRow >= rows.Count)
 			{
 				break;
 			}
 
 			var fields = rows[sourceRow];
-			for (int c = 0; c < fields.Count && c < colCount; c++)
+			for (var c = 0; c < fields.Count && c < colCount; c++)
 			{
 				var text = fields[c];
 				if (string.IsNullOrEmpty(text))
@@ -176,8 +176,8 @@ public class TableDataModel
 
 	public (int MaxRow, int MaxCol) GetUsedBounds()
 	{
-		int maxRow = -1;
-		int maxCol = -1;
+		var maxRow = -1;
+		var maxCol = -1;
 
 		foreach (var key in Cells.Keys)
 		{
@@ -187,7 +187,7 @@ public class TableDataModel
 				continue;
 			}
 
-			if (int.TryParse(parts[0], out int r) && int.TryParse(parts[1], out int c))
+			if (int.TryParse(parts[0], out var r) && int.TryParse(parts[1], out var c))
 			{
 				maxRow = Math.Max(maxRow, r);
 				maxCol = Math.Max(maxCol, c);
@@ -209,12 +209,12 @@ public class TableDataModel
 
 	private static object ParseCellObject(string text)
 	{
-		if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out int i))
+		if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
 		{
 			return i;
 		}
 
-		if (double.TryParse(text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out double d))
+		if (double.TryParse(text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var d))
 		{
 			return d;
 		}
@@ -229,7 +229,7 @@ public class TableDataModel
 			return string.Empty;
 		}
 
-		bool mustQuote = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
+		var mustQuote = value.Contains(',') || value.Contains('"') || value.Contains('\n') || value.Contains('\r');
 		if (!mustQuote)
 		{
 			return value;
@@ -243,11 +243,11 @@ public class TableDataModel
 		var result = new List<List<string>>();
 		var row = new List<string>();
 		var field = new StringBuilder();
-		bool inQuotes = false;
+		var inQuotes = false;
 
-		for (int i = 0; i < csv.Length; i++)
+		for (var i = 0; i < csv.Length; i++)
 		{
-			char ch = csv[i];
+			var ch = csv[i];
 
 			if (inQuotes)
 			{
@@ -310,9 +310,45 @@ public class TableDataModel
 
 	public void AddSampleData()
 	{
-		SetCell(0, 0, new CellValue("Hello"));
-		SetCell(0, 1, new CellValue(42));
-		SetCell(1, 0, new CellValue(3.14159) { Format = "N2" });
-		SetCell(2, 2, new CellValue("Blazor Table Editor") { BackgroundColor = "#e6f3ff" });
+		if (ColumnCount >= 5)
+		{
+			ColumnHeaders[0] = "Name";
+			ColumnHeaders[1] = "Category";
+			ColumnHeaders[2] = "Qty";
+			ColumnHeaders[3] = "Status";
+			ColumnHeaders[4] = "Notes";
+		}
+
+		string[] names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
+		string[] categories = ["Fruit", "Fruit", "Vegetable", "Dairy", "Fruit", "Vegetable", "Dairy", "Grain"];
+		object[] qtys = [12, 5, 20, 8, 15, 3, new CellValue(3.14159) { Format = "N2" }, 7];
+		string[] statuses = ["Open", "Closed", "Open", "Pending", "Open", "Closed", "Pending", "Open"];
+		string[] notes = ["Hello", "", "Blazor Table Editor", "Rush", "", "Backorder", "Formatted qty", ""];
+
+		for (var i = 0; i < names.Length; i++)
+		{
+			SetCell(i, 0, new CellValue(names[i]));
+			SetCell(i, 1, new CellValue(categories[i]));
+			if (qtys[i] is CellValue cv)
+			{
+				SetCell(i, 2, cv);
+			}
+			else
+			{
+				SetCell(i, 2, new CellValue(qtys[i]));
+			}
+
+			SetCell(i, 3, new CellValue(statuses[i]));
+			if (!string.IsNullOrEmpty(notes[i]))
+			{
+				var note = new CellValue(notes[i]);
+				if (i == 2)
+				{
+					note.BackgroundColor = "#e6f3ff";
+				}
+
+				SetCell(i, 4, note);
+			}
+		}
 	}
 }

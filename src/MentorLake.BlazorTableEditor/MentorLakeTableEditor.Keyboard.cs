@@ -46,17 +46,27 @@ public partial class MentorLakeTableEditor
 				Context.SetActiveCell(Context.ActiveCell.Row, Context.ActiveCell.Col - 1, e.ShiftKey);
 				break;
 			case "ArrowDown":
-				Context.SetActiveCell(Context.ActiveCell.Row + 1, Context.ActiveCell.Col, e.ShiftKey);
+				Context.SetActiveCell(
+					Context.FindNextVisibleRow(Context.ActiveCell.Row, 1),
+					Context.ActiveCell.Col,
+					e.ShiftKey);
 				break;
 			case "ArrowUp":
-				Context.SetActiveCell(Context.ActiveCell.Row - 1, Context.ActiveCell.Col, e.ShiftKey);
+				Context.SetActiveCell(
+					Context.FindNextVisibleRow(Context.ActiveCell.Row, -1),
+					Context.ActiveCell.Col,
+					e.ShiftKey);
 				break;
 			case "Enter":
 			case "F2":
 				BeginEdit(Context.ActiveCell.Row, Context.ActiveCell.Col);
 				break;
 			case "Escape":
-				if (IsContextMenuOpen)
+				if (IsFilterPopupOpen)
+				{
+					CloseFilterPopup();
+				}
+				else if (IsContextMenuOpen)
 				{
 					CloseContextMenu();
 				}

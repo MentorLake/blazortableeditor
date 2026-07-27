@@ -5,6 +5,7 @@ namespace MentorLake.BlazorTableEditor;
 public partial class MentorLakeTableEditor
 {
 	private TableContextMenu _contextMenu;
+	private TableColumnFilterPopup _filterPopup;
 
 	private void OnRootContextMenu(MouseEventArgs e)
 	{
@@ -17,6 +18,8 @@ public partial class MentorLakeTableEditor
 		{
 			CommitEdit();
 		}
+
+		CloseFilterPopup();
 
 		row = Math.Clamp(row, 0, Math.Max(0, Context.Model.RowCount - 1));
 		col = Math.Clamp(col, 0, Math.Max(0, Context.Model.ColumnCount - 1));
@@ -39,6 +42,38 @@ public partial class MentorLakeTableEditor
 	}
 
 	private bool IsContextMenuOpen => _contextMenu is not null && _contextMenu.IsOpen;
+
+	private void OnColFilterClick((int Col, MouseEventArgs Mouse) args)
+	{
+		if (_isEditing)
+		{
+			CommitEdit();
+		}
+
+		CloseContextMenu();
+		_pressedColHeader = null;
+		_isSelecting = false;
+
+		var x = args.Mouse.ClientX;
+		var y = args.Mouse.ClientY;
+		_filterPopup.Open(args.Col, x, y);
+	}
+
+	private void CloseFilterPopup()
+	{
+		if (_filterPopup is not null)
+		{
+			_filterPopup.Close();
+		}
+	}
+
+	private bool IsFilterPopupOpen => _filterPopup is not null && _filterPopup.IsOpen;
+
+	private void OnFilterChanged()
+	{
+		RecomputeVisibleRange();
+		StateHasChanged();
+	}
 
 	private void OnContextMenuStructureChanged() => OnSheetStructureChanged();
 
