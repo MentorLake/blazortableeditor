@@ -1,0 +1,19 @@
+.bte-selection {
+	position: absolute;
+	box-sizing: border-box;
+	border: 2px solid #1a73e8;
+	pointer-events: none;
+	z-index: 6;
+}
+
+.bte-fill-handle {
+	position: absolute;
+	right: -4px;
+	bottom: -4px;
+	width: 8px;
+	height: 8px;
+	background: #1a73e8;
+	border: 1px solid #fff;
+	pointer-events: auto;
+	cursor: crosshair;
+}

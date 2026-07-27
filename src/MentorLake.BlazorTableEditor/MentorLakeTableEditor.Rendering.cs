@@ -33,18 +33,11 @@ public partial class MentorLakeTableEditor
 			await InvokeAsync(StateHasChanged);
 		}
 
-		if (_isEditing)
+		if (_isEditing && IsEditingHeader)
 		{
 			try
 			{
-				if (IsEditingHeader)
-				{
-					await _headerEditorRef.FocusAsync();
-				}
-				else
-				{
-					await _editorRef.FocusAsync();
-				}
+				await _headerEditorRef.FocusAsync();
 			}
 			catch
 			{

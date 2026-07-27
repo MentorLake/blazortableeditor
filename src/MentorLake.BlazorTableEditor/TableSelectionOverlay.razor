@@ -1,0 +1,11 @@
+@using MentorLake.BlazorTableEditor.Models
+
+@if (Sheet.CurrentSelection is { } selection)
+{
+	var box = GetRegionBox(selection);
+	<div class="bte-selection" style="@box">
+		<div class="bte-fill-handle"
+		     @onmousedown:stopPropagation="true"
+		     @onmousedown="OnFillHandleMouseDown"></div>
+	</div>
+}

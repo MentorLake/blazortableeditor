@@ -1,0 +1,17 @@
+@using MentorLake.BlazorTableEditor.Models
+
+@if (IsEditing && Position.IsValid)
+{
+	var left = Sheet.GetColumnLeft(Position.Col);
+	var top = Sheet.GetRowTop(Position.Row);
+	var width = Sheet.GetColumnWidth(Position.Col);
+	var height = Sheet.GetRowHeight(Position.Row);
+	<input @ref="_inputRef"
+	       class="bte-editor"
+	       style="@($"left:{left}px;top:{top}px;width:{width}px;height:{height}px;")"
+	       value="@Value"
+	       @oninput="OnInputAsync"
+	       @onkeydown="OnKeyDown"
+	       @onkeydown:stopPropagation="true"
+	       @onblur="OnBlur"/>
+}

@@ -14,7 +14,6 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	private SheetContext Context { get; set; } = null!;
 	private ElementReference _rootRef;
 	private ElementReference _viewportRef;
-	private ElementReference _editorRef;
 	private ElementReference _headerEditorRef;
 	private bool _isSelecting;
 	private bool _isResizingCol;

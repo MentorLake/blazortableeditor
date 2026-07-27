@@ -157,15 +157,8 @@
 							}
 						}
 
-						@if (Context.CurrentSelection is { } selection)
-						{
-							var box = GetRegionBox(selection);
-							<div class="bte-selection" style="@box">
-								<div class="bte-fill-handle"
-								     @onmousedown:stopPropagation="true"
-								     @onmousedown="OnFillHandleMouseDown"></div>
-							</div>
-						}
+						<TableSelectionOverlay Sheet="Context"
+						                       OnFillHandleMouseDown="OnFillHandleMouseDown" />
 
 						@if (Context.IsDragFilling && Context.DragFillPreview is { } fill)
 						{
@@ -179,21 +172,12 @@
 							</div>
 						}
 
-						@if (_isEditing && _editPos.IsValid)
-						{
-							var eLeft = Context.GetColumnLeft(_editPos.Col);
-							var eTop = Context.GetRowTop(_editPos.Row);
-							var eWidth = Context.GetColumnWidth(_editPos.Col);
-							var eHeight = Context.GetRowHeight(_editPos.Row);
-							<input @ref="_editorRef"
-							       class="bte-editor"
-							       style="@($"left:{eLeft}px;top:{eTop}px;width:{eWidth}px;height:{eHeight}px;")"
-							       @bind="_editValue"
-							       @bind:event="oninput"
-							       @onkeydown="OnEditorKeyDown"
-							       @onkeydown:stopPropagation="true"
-							       @onblur="CommitEdit"/>
-						}
+						<TableCellEditor Sheet="Context"
+						                 IsEditing="_isEditing && !IsEditingHeader"
+						                 Position="_editPos"
+						                 @bind-Value="_editValue"
+						                 OnCommit="CommitEdit"
+						                 OnKeyDown="OnEditorKeyDown" />
 					</div>
 				</div>
 			</div>

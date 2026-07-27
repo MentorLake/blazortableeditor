@@ -1,0 +1,11 @@
+.bte-editor {
+	position: absolute;
+	z-index: 20;
+	box-sizing: border-box;
+	border: 2px solid #1a73e8;
+	margin: 0;
+	padding: 0 4px;
+	outline: none;
+	font: inherit;
+	background: #fff;
+}

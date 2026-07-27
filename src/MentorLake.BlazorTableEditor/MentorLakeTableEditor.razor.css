@@ -318,14 +318,6 @@
 	outline-offset: -2px;
 }
 
-.bte-selection {
-	position: absolute;
-	box-sizing: border-box;
-	border: 2px solid #1a73e8;
-	pointer-events: none;
-	z-index: 6;
-}
-
 .bte-clipboard-source {
 	position: absolute;
 	box-sizing: border-box;
@@ -388,18 +380,6 @@
 	}
 }
 
-.bte-fill-handle {
-	position: absolute;
-	right: -4px;
-	bottom: -4px;
-	width: 8px;
-	height: 8px;
-	background: #1a73e8;
-	border: 1px solid #fff;
-	pointer-events: auto;
-	cursor: crosshair;
-}
-
 .bte-fill-preview {
 	position: absolute;
 	box-sizing: border-box;
@@ -407,18 +387,6 @@
 	background: rgba(26, 115, 232, 0.08);
 	pointer-events: none;
 	z-index: 5;
-}
-
-.bte-editor {
-	position: absolute;
-	z-index: 20;
-	box-sizing: border-box;
-	border: 2px solid #1a73e8;
-	margin: 0;
-	padding: 0 4px;
-	outline: none;
-	font: inherit;
-	background: #fff;
 }
 
 .bte-resize-col {
@@ -483,14 +451,14 @@
 .bte-root.is-row-resizing .bte-col-header,
 .bte-root.is-row-resizing .bte-row-header,
 .bte-root.is-row-resizing .bte-cell,
-.bte-root.is-col-resizing .bte-selection,
+.bte-root.is-col-resizing ::deep .bte-selection,
 .bte-root.is-col-resizing .bte-fill-preview,
 .bte-root.is-col-resizing .bte-clipboard-source,
-.bte-root.is-col-resizing .bte-editor,
-.bte-root.is-row-resizing .bte-selection,
+.bte-root.is-col-resizing ::deep .bte-editor,
+.bte-root.is-row-resizing ::deep .bte-selection,
 .bte-root.is-row-resizing .bte-fill-preview,
 .bte-root.is-row-resizing .bte-clipboard-source,
-.bte-root.is-row-resizing .bte-editor {
+.bte-root.is-row-resizing ::deep .bte-editor {
 	transition: none !important;
 }
 
