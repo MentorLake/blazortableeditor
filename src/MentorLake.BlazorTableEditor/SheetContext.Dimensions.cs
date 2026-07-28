@@ -131,4 +131,27 @@ public partial class SheetContext
 			map[kvp.Key] = kvp.Value;
 		}
 	}
+
+	private static void ShiftMapRange(Dictionary<int, int> map, int startIndex, int endIndex)
+	{
+		var count = endIndex - startIndex + 1;
+		var next = new Dictionary<int, int>();
+		foreach (var kvp in map)
+		{
+			if (kvp.Key < startIndex)
+			{
+				next[kvp.Key] = kvp.Value;
+			}
+			else if (kvp.Key > endIndex)
+			{
+				next[kvp.Key - count] = kvp.Value;
+			}
+		}
+
+		map.Clear();
+		foreach (var kvp in next)
+		{
+			map[kvp.Key] = kvp.Value;
+		}
+	}
 }

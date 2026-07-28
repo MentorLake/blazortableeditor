@@ -18,13 +18,14 @@
 		<button type="button" class="bte-context-item" @onclick="InsertColLeft">Insert column left</button>
 		<button type="button" class="bte-context-item" @onclick="InsertColRight">Insert column right</button>
 		<button type="button" class="bte-context-item" @onclick="DeleteColumn"
-		        disabled="@(!CanDeleteColumn)">Delete column
+		        disabled="@(!CanDeleteColumn)">
+			@DeleteColumnLabel
 		</button>
 		<div class="bte-context-separator"></div>
 		<button type="button" class="bte-context-item" @onclick="InsertRowAbove">Insert row above</button>
 		<button type="button" class="bte-context-item" @onclick="InsertRowBelow">Insert row below</button>
 		<button type="button" class="bte-context-item" @onclick="DeleteRow" disabled="@(!CanDeleteRow)">
-			Delete row
+			@DeleteRowLabel
 		</button>
 		<div class="bte-context-separator"></div>
 		<button type="button" class="bte-context-item" @onclick="CutAsync">

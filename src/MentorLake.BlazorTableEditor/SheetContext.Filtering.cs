@@ -168,22 +168,26 @@ public partial class SheetContext
 		}
 	}
 
-	internal void ShiftFiltersAfterColumnDelete(int index)
+	internal void ShiftFiltersAfterColumnDelete(int index) =>
+		ShiftFiltersAfterColumnsDelete(index, index);
+
+	internal void ShiftFiltersAfterColumnsDelete(int startCol, int endCol)
 	{
 		if (_columnFilters.Count == 0)
 		{
 			return;
 		}
 
+		var count = endCol - startCol + 1;
 		var next = new Dictionary<int, HashSet<string>>();
 		foreach (var kvp in _columnFilters)
 		{
-			if (kvp.Key == index)
+			if (kvp.Key >= startCol && kvp.Key <= endCol)
 			{
 				continue;
 			}
 
-			var key = kvp.Key > index ? kvp.Key - 1 : kvp.Key;
+			var key = kvp.Key > endCol ? kvp.Key - count : kvp.Key;
 			next[key] = kvp.Value;
 		}
 

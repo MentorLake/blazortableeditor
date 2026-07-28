@@ -19,8 +19,84 @@ public partial class TableContextMenu
 
 	public bool IsOpen { get; private set; }
 
-	private bool CanDeleteRow => Sheet.Model.RowCount > 1;
-	private bool CanDeleteColumn => Sheet.Model.ColumnCount > 1;
+	private void GetDeleteRowRange(out int startRow, out int endRow)
+	{
+		var sel = Sheet.GetEffectiveSelection();
+		if (sel.StartRow <= _row && _row <= sel.EndRow)
+		{
+			startRow = sel.StartRow;
+			endRow = sel.EndRow;
+		}
+		else
+		{
+			startRow = _row;
+			endRow = _row;
+		}
+	}
+
+	private void GetDeleteColumnRange(out int startCol, out int endCol)
+	{
+		var sel = Sheet.GetEffectiveSelection();
+		if (sel.StartCol <= _col && _col <= sel.EndCol)
+		{
+			startCol = sel.StartCol;
+			endCol = sel.EndCol;
+		}
+		else
+		{
+			startCol = _col;
+			endCol = _col;
+		}
+	}
+
+	private int DeleteRowCount
+	{
+		get
+		{
+			GetDeleteRowRange(out var start, out var end);
+			return end - start + 1;
+		}
+	}
+
+	private int DeleteColumnCount
+	{
+		get
+		{
+			GetDeleteColumnRange(out var start, out var end);
+			return end - start + 1;
+		}
+	}
+
+	private bool CanDeleteRow
+	{
+		get
+		{
+			if (Sheet.Model.RowCount <= 1)
+			{
+				return false;
+			}
+
+			GetDeleteRowRange(out var start, out var end);
+			return end - start + 1 < Sheet.Model.RowCount;
+		}
+	}
+
+	private bool CanDeleteColumn
+	{
+		get
+		{
+			if (Sheet.Model.ColumnCount <= 1)
+			{
+				return false;
+			}
+
+			GetDeleteColumnRange(out var start, out var end);
+			return end - start + 1 < Sheet.Model.ColumnCount;
+		}
+	}
+
+	private string DeleteRowLabel => DeleteRowCount > 1 ? $"Delete {DeleteRowCount} rows" : "Delete row";
+	private string DeleteColumnLabel => DeleteColumnCount > 1 ? $"Delete {DeleteColumnCount} columns" : "Delete column";
 
 	public void Open(double x, double y, int row, int col, bool allowRename = false)
 	{
@@ -94,7 +170,8 @@ public partial class TableContextMenu
 			return;
 		}
 
-		Sheet.DeleteColumn(_col);
+		GetDeleteColumnRange(out var start, out var end);
+		Sheet.DeleteColumns(start, end);
 		Close();
 		await OnStructureChanged.InvokeAsync();
 	}
@@ -121,7 +198,8 @@ public partial class TableContextMenu
 			return;
 		}
 
-		Sheet.DeleteRow(_row);
+		GetDeleteRowRange(out var start, out var end);
+		Sheet.DeleteRows(start, end);
 		Close();
 		await OnStructureChanged.InvokeAsync();
 	}

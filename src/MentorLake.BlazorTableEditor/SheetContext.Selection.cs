@@ -177,27 +177,51 @@ public partial class SheetContext
 		}
 	}
 
-	private void AdjustSelectionAfterRowDelete(int index)
+	private void AdjustSelectionAfterRowDelete(int index) =>
+		AdjustSelectionAfterRowsDelete(index, index);
+
+	private void AdjustSelectionAfterRowsDelete(int startRow, int endRow)
 	{
-		ActiveCell = ShiftRowUpAfterDelete(ActiveCell, index);
-		SelectionAnchor = ShiftRowUpAfterDelete(SelectionAnchor, index);
+		var count = endRow - startRow + 1;
+		ActiveCell = ShiftRowUpAfterRangeDelete(ActiveCell, startRow, endRow);
+		SelectionAnchor = ShiftRowUpAfterRangeDelete(SelectionAnchor, startRow, endRow);
 		if (CurrentSelection is { } sel)
 		{
 			var n = sel.Normalize();
-			if (n.StartRow == index && n.EndRow == index)
+			if (n.StartRow >= startRow && n.EndRow <= endRow)
 			{
-				var row = Math.Min(index, Model.RowCount - 1);
+				var row = Math.Min(startRow, Model.RowCount - 1);
 				CurrentSelection = new CellRegion(row, n.StartCol, row, n.EndCol);
 				ActiveCell = new CellPosition(row, Math.Clamp(ActiveCell.Col, n.StartCol, n.EndCol));
 				SelectionAnchor = ActiveCell;
 			}
 			else
 			{
-				var start = n.StartRow > index ? n.StartRow - 1 : n.StartRow;
-				var end = n.EndRow >= index ? n.EndRow - 1 : n.EndRow;
+				var start = n.StartRow;
+				var end = n.EndRow;
+
+				if (start > endRow)
+				{
+					start -= count;
+				}
+				else if (start >= startRow)
+				{
+					start = startRow;
+				}
+
+				if (end > endRow)
+				{
+					end -= count;
+				}
+				else if (end >= startRow)
+				{
+					end = startRow - 1;
+				}
+
 				if (end < start)
 				{
-					end = start;
+					var row = Math.Min(startRow, Model.RowCount - 1);
+					start = end = row;
 				}
 
 				start = Math.Clamp(start, 0, Model.RowCount - 1);
@@ -222,27 +246,51 @@ public partial class SheetContext
 		}
 	}
 
-	private void AdjustSelectionAfterColumnDelete(int index)
+	private void AdjustSelectionAfterColumnDelete(int index) =>
+		AdjustSelectionAfterColumnsDelete(index, index);
+
+	private void AdjustSelectionAfterColumnsDelete(int startCol, int endCol)
 	{
-		ActiveCell = ShiftColLeftAfterDelete(ActiveCell, index);
-		SelectionAnchor = ShiftColLeftAfterDelete(SelectionAnchor, index);
+		var count = endCol - startCol + 1;
+		ActiveCell = ShiftColLeftAfterRangeDelete(ActiveCell, startCol, endCol);
+		SelectionAnchor = ShiftColLeftAfterRangeDelete(SelectionAnchor, startCol, endCol);
 		if (CurrentSelection is { } sel)
 		{
 			var n = sel.Normalize();
-			if (n.StartCol == index && n.EndCol == index)
+			if (n.StartCol >= startCol && n.EndCol <= endCol)
 			{
-				var col = Math.Min(index, Model.ColumnCount - 1);
+				var col = Math.Min(startCol, Model.ColumnCount - 1);
 				CurrentSelection = new CellRegion(n.StartRow, col, n.EndRow, col);
 				ActiveCell = new CellPosition(Math.Clamp(ActiveCell.Row, n.StartRow, n.EndRow), col);
 				SelectionAnchor = ActiveCell;
 			}
 			else
 			{
-				var start = n.StartCol > index ? n.StartCol - 1 : n.StartCol;
-				var end = n.EndCol >= index ? n.EndCol - 1 : n.EndCol;
+				var start = n.StartCol;
+				var end = n.EndCol;
+
+				if (start > endCol)
+				{
+					start -= count;
+				}
+				else if (start >= startCol)
+				{
+					start = startCol;
+				}
+
+				if (end > endCol)
+				{
+					end -= count;
+				}
+				else if (end >= startCol)
+				{
+					end = startCol - 1;
+				}
+
 				if (end < start)
 				{
-					end = start;
+					var col = Math.Min(startCol, Model.ColumnCount - 1);
+					start = end = col;
 				}
 
 				start = Math.Clamp(start, 0, Model.ColumnCount - 1);
@@ -257,16 +305,20 @@ public partial class SheetContext
 	private static CellPosition ShiftRowDown(CellPosition pos, int index) =>
 		pos.Row >= index ? new CellPosition(pos.Row + 1, pos.Col) : pos;
 
-	private CellPosition ShiftRowUpAfterDelete(CellPosition pos, int index)
+	private CellPosition ShiftRowUpAfterDelete(CellPosition pos, int index) =>
+		ShiftRowUpAfterRangeDelete(pos, index, index);
+
+	private CellPosition ShiftRowUpAfterRangeDelete(CellPosition pos, int startRow, int endRow)
 	{
-		if (pos.Row > index)
+		if (pos.Row > endRow)
 		{
-			return new CellPosition(pos.Row - 1, pos.Col);
+			var count = endRow - startRow + 1;
+			return new CellPosition(pos.Row - count, pos.Col);
 		}
 
-		if (pos.Row == index)
+		if (pos.Row >= startRow)
 		{
-			return new CellPosition(Math.Min(index, Model.RowCount - 1), pos.Col);
+			return new CellPosition(Math.Min(startRow, Model.RowCount - 1), pos.Col);
 		}
 
 		return pos;
@@ -275,16 +327,20 @@ public partial class SheetContext
 	private static CellPosition ShiftColRight(CellPosition pos, int index) =>
 		pos.Col >= index ? new CellPosition(pos.Row, pos.Col + 1) : pos;
 
-	private CellPosition ShiftColLeftAfterDelete(CellPosition pos, int index)
+	private CellPosition ShiftColLeftAfterDelete(CellPosition pos, int index) =>
+		ShiftColLeftAfterRangeDelete(pos, index, index);
+
+	private CellPosition ShiftColLeftAfterRangeDelete(CellPosition pos, int startCol, int endCol)
 	{
-		if (pos.Col > index)
+		if (pos.Col > endCol)
 		{
-			return new CellPosition(pos.Row, pos.Col - 1);
+			var count = endCol - startCol + 1;
+			return new CellPosition(pos.Row, pos.Col - count);
 		}
 
-		if (pos.Col == index)
+		if (pos.Col >= startCol)
 		{
-			return new CellPosition(pos.Row, Math.Min(index, Model.ColumnCount - 1));
+			return new CellPosition(pos.Row, Math.Min(startCol, Model.ColumnCount - 1));
 		}
 
 		return pos;
