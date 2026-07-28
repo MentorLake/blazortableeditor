@@ -32,8 +32,10 @@ public partial class SheetContext
 			values.Add(GetFilterKey(r, col));
 		}
 
+		values.Add(FilterBlankKey);
+
 		return values
-			.OrderBy(v => v == FilterBlankKey ? 1 : 0)
+			.OrderBy(v => v == FilterBlankKey ? 0 : 1)
 			.ThenBy(v => TryParseSortNumber(v, out var n) ? 0 : 1)
 			.ThenBy(v => TryParseSortNumber(v, out var n) ? n : 0)
 			.ThenBy(v => v, StringComparer.OrdinalIgnoreCase)
