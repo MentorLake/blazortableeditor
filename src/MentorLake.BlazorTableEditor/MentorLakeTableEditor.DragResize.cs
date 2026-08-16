@@ -20,6 +20,19 @@ public partial class MentorLakeTableEditor
 	}
 
 	[JSInvokable]
+	public Task OnDropdownCellActivate(int row, int col, bool shiftKey)
+	{
+		if (_isEditing)
+		{
+			CommitEdit();
+		}
+
+		_isSelecting = false;
+		Context.SetActiveCell(row, col, shiftKey);
+		return Task.CompletedTask;
+	}
+
+	[JSInvokable]
 	public Task OnSelectionDragEnd(int row, int col)
 	{
 		_isSelecting = false;

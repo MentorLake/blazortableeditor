@@ -5,15 +5,25 @@ namespace MentorLake.BlazorTableEditor;
 public partial class SheetContext
 {
 	private ITableValidator _validator;
+	private IReadOnlyDictionary<string, IReadOnlyList<string>> _columnValidValues;
 	private readonly Dictionary<CellPosition, string> _validationErrors = new();
+	private static readonly IReadOnlyList<string> EmptyValidValues = Array.Empty<string>();
 
 	public IReadOnlyDictionary<CellPosition, string> ValidationErrors => _validationErrors;
 
 	public ITableValidator Validator => _validator;
 
+	public IReadOnlyDictionary<string, IReadOnlyList<string>> ColumnValidValues => _columnValidValues;
+
 	public void SetValidator(ITableValidator validator)
 	{
 		_validator = validator;
+		Revalidate();
+	}
+
+	public void SetColumnValidValues(IReadOnlyDictionary<string, IReadOnlyList<string>> columnValidValues)
+	{
+		_columnValidValues = columnValidValues;
 		Revalidate();
 	}
 
@@ -26,46 +36,119 @@ public partial class SheetContext
 		return msg;
 	}
 
-	private void Revalidate()
+	public IReadOnlyList<string> GetValidValuesForColumn(int col)
 	{
-		_validationErrors.Clear();
-		if (_validator is null)
+		if (_columnValidValues is null || col < 0 || col >= Model.ColumnCount)
 		{
-			NotifyStateChanged();
-			return;
+			return EmptyValidValues;
 		}
 
-		var errors = _validator.Validate(Model);
-		if (errors is not null)
+		var header = Model.ColumnHeaders[col];
+		if (string.IsNullOrEmpty(header))
 		{
-			foreach (var kvp in errors)
+			return EmptyValidValues;
+		}
+
+		foreach (var kvp in _columnValidValues)
+		{
+			if (string.Equals(kvp.Key, header, StringComparison.OrdinalIgnoreCase))
 			{
-				if (kvp.Key.IsValid && !string.IsNullOrEmpty(kvp.Value))
-				{
-					_validationErrors[kvp.Key] = kvp.Value;
-				}
+				return kvp.Value ?? EmptyValidValues;
 			}
 		}
 
+		return EmptyValidValues;
+	}
+
+	public bool HasValidValuesForColumn(int col)
+	{
+		var values = GetValidValuesForColumn(col);
+		return values.Count > 0;
+	}
+
+	private void Revalidate()
+	{
+		ApplyValidation();
 		NotifyStateChanged();
 	}
 
 	private void RevalidateInternal()
 	{
-		if (_validator is not null)
+		ApplyValidation();
+	}
+
+	private void ApplyValidation()
+	{
+		_validationErrors.Clear();
+		ApplyColumnValidValueErrors();
+
+		if (_validator is null)
 		{
-			_validationErrors.Clear();
-			var errors = _validator.Validate(Model);
-			if (errors is not null)
+			return;
+		}
+
+		var errors = _validator.Validate(Model);
+		if (errors is null)
+		{
+			return;
+		}
+
+		foreach (var kvp in errors)
+		{
+			if (kvp.Key.IsValid && !string.IsNullOrEmpty(kvp.Value))
 			{
-				foreach (var kvp in errors)
+				_validationErrors[kvp.Key] = kvp.Value;
+			}
+		}
+	}
+
+	private void ApplyColumnValidValueErrors()
+	{
+		if (_columnValidValues is null || _columnValidValues.Count == 0)
+		{
+			return;
+		}
+
+		for (var c = 0; c < Model.ColumnCount; c++)
+		{
+			var validValues = GetValidValuesForColumn(c);
+			if (validValues.Count == 0)
+			{
+				continue;
+			}
+
+			for (var r = 0; r < Model.RowCount; r++)
+			{
+				var cell = Model.GetCell(r, c);
+				if (cell?.Value is null)
 				{
-					if (kvp.Key.IsValid && !string.IsNullOrEmpty(kvp.Value))
-					{
-						_validationErrors[kvp.Key] = kvp.Value;
-					}
+					continue;
+				}
+
+				var text = cell.Value.ToString() ?? string.Empty;
+				if (string.IsNullOrEmpty(text))
+				{
+					continue;
+				}
+
+				if (!ContainsValidValue(validValues, text))
+				{
+					_validationErrors[new CellPosition(r, c)] = "Value is not in the list of allowed values.";
 				}
 			}
 		}
+	}
+
+	private static bool ContainsValidValue(IReadOnlyList<string> validValues, string text)
+	{
+		for (var i = 0; i < validValues.Count; i++)
+		{
+			if (string.Equals(validValues[i], text, StringComparison.Ordinal))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

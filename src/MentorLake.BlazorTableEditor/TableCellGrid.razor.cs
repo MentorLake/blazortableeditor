@@ -17,6 +17,7 @@ public partial class TableCellGrid
 	[Parameter] public EventCallback<(int Row, int Col)> OnCellMouseEnter { get; set; }
 	[Parameter] public EventCallback<(int Row, int Col)> OnDoubleClick { get; set; }
 	[Parameter] public EventCallback<(int Row, int Col, MouseEventArgs Mouse)> OnContextMenu { get; set; }
+	[Parameter] public EventCallback<(int Row, int Col, string Value)> OnDropdownChanged { get; set; }
 	[Parameter] public RenderFragment ChildContent { get; set; }
 
 	private bool IsInClipboardSource(int row, int col) =>
@@ -30,7 +31,7 @@ public partial class TableCellGrid
 	private string GetClipboardBadgeText() =>
 		ClipboardMode == ClipboardVisualMode.Cut ? "CUT" : "COPIED";
 
-	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode, bool hasError = false)
+	private static string BuildCellClass(bool isActive, bool isSelected, bool inFill, bool inClipboard, ClipboardVisualMode mode, bool hasError = false, bool hasSelect = false)
 	{
 		var css = "bte-cell";
 		if (isActive) css += " is-active";
@@ -39,6 +40,7 @@ public partial class TableCellGrid
 		if (inClipboard && mode == ClipboardVisualMode.Copy) css += " is-copied";
 		if (inClipboard && mode == ClipboardVisualMode.Cut) css += " is-cut";
 		if (hasError) css += " is-error";
+		if (hasSelect) css += " has-select";
 		return css;
 	}
 
@@ -68,6 +70,19 @@ public partial class TableCellGrid
 		return $"left:{left}px;top:{top}px;width:{right - left}px;height:{bottom - top}px;";
 	}
 
+	private static bool ContainsValue(IReadOnlyList<string> values, string text)
+	{
+		for (var i = 0; i < values.Count; i++)
+		{
+			if (string.Equals(values[i], text, StringComparison.Ordinal))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	private Task OnCellMouseDownAsync(int row, int col, MouseEventArgs e) =>
 		OnCellMouseDown.InvokeAsync((row, col, e));
 
@@ -79,4 +94,10 @@ public partial class TableCellGrid
 
 	private Task OnContextMenuAsync(int row, int col, MouseEventArgs e) =>
 		OnContextMenu.InvokeAsync((row, col, e));
+
+	private Task OnSelectChangedAsync(int row, int col, ChangeEventArgs e)
+	{
+		var value = e.Value?.ToString() ?? string.Empty;
+		return OnDropdownChanged.InvokeAsync((row, col, value));
+	}
 }

@@ -52,8 +52,25 @@ public partial class MentorLakeTableEditor
 	private void OnCellContextMenuFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
 		OpenContextMenu(args.Mouse, args.Row, args.Col);
 
+	private void OnDropdownChangedFromChild((int Row, int Col, string Value) args)
+	{
+		if (_isEditing)
+		{
+			CommitEdit();
+		}
+
+		Context.SetActiveCell(args.Row, args.Col);
+		Context.SetValue(args.Row, args.Col, args.Value);
+	}
+
 	private void BeginEdit(int row, int col)
 	{
+		if (Context.HasValidValuesForColumn(col))
+		{
+			Context.SetActiveCell(row, col);
+			return;
+		}
+
 		if (IsEditingHeader)
 		{
 			CommitEdit();

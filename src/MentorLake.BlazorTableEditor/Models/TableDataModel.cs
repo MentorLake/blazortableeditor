@@ -320,7 +320,7 @@ public class TableDataModel
 		}
 
 		string[] names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
-		string[] categories = ["Fruit", "Fruit", "Vegetable", "Dairy", "Fruit", "Vegetable", "Dairy", "Grain"];
+		string[] categories = ["Fruit", "Fruit", "Vegetable", "Dairy", "Fruit", "Vegetable", "Dairy", "Unknown"];
 		object[] qtys = [12, 5, 20, 8, 15, 3, new CellValue(3.14159) { Format = "N2" }, 7];
 		string[] statuses = ["Open", "Closed", "Open", "Pending", "Open", "Closed", "Pending", "Open"];
 		string[] notes = ["Hello", "", "Blazor Table Editor", "Rush", "", "Backorder", "Formatted qty", ""];

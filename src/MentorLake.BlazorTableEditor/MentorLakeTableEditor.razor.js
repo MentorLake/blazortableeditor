@@ -80,6 +80,19 @@ export function createInstance() {
 					return;
 				}
 
+				const dropdown = e.target.closest && e.target.closest("select.bte-cell-select");
+				if (dropdown) {
+					const cell = dropdown.closest(".bte-cell");
+					if (cell && self._viewport.contains(cell)) {
+						const row = parseInt(cell.getAttribute("data-row"), 10);
+						const col = parseInt(cell.getAttribute("data-col"), 10);
+						if (Number.isFinite(row) && Number.isFinite(col) && self._dotNetRef) {
+							self._dotNetRef.invokeMethodAsync("OnDropdownCellActivate", row, col, !!e.shiftKey).catch(() => {});
+						}
+					}
+					return;
+				}
+
 				const cell = e.target.closest && e.target.closest(".bte-cell");
 				if (cell && self._viewport.contains(cell)) {
 					const row = parseInt(cell.getAttribute("data-row"), 10);

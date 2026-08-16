@@ -57,6 +57,7 @@ public partial class MentorLakeTableEditor
 			UnwireContext(Context);
 			Context = new SheetContext(model, addSampleIfEmpty: false);
 			Context.SetValidator(Validator);
+			Context.SetColumnValidValues(ColumnValidValues);
 			WireContext(Context);
 			_clipboardSource = null;
 			_clipboardMode = ClipboardVisualMode.None;

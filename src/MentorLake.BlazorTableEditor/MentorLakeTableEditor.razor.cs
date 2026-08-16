@@ -9,6 +9,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	[Parameter] public TableDataModel Model { get; set; }
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
 	[Parameter] public ITableValidator Validator { get; set; }
+	[Parameter] public IReadOnlyDictionary<string, IReadOnlyList<string>> ColumnValidValues { get; set; }
 	[Parameter] public bool ShowToolbar { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;
@@ -38,6 +39,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	{
 		Context = new SheetContext(Model, addSampleIfEmpty: true);
 		Context.SetValidator(Validator);
+		Context.SetColumnValidValues(ColumnValidValues);
 		WireContext(Context);
 		RecomputeVisibleRange();
 	}
@@ -46,18 +48,28 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	{
 		var modelChanged = Model is not null && !ReferenceEquals(Context.Model, Model);
 		var validatorChanged = !ReferenceEquals(Context.Validator, Validator);
+		var validValuesChanged = !ReferenceEquals(Context.ColumnValidValues, ColumnValidValues);
 
 		if (modelChanged)
 		{
 			UnwireContext(Context);
 			Context = new SheetContext(Model, addSampleIfEmpty: false);
 			Context.SetValidator(Validator);
+			Context.SetColumnValidValues(ColumnValidValues);
 			WireContext(Context);
 			RecomputeVisibleRange();
 		}
-		else if (validatorChanged)
+		else
 		{
-			Context.SetValidator(Validator);
+			if (validatorChanged)
+			{
+				Context.SetValidator(Validator);
+			}
+
+			if (validValuesChanged)
+			{
+				Context.SetColumnValidValues(ColumnValidValues);
+			}
 		}
 	}
 	private void WireContext(SheetContext ctx)

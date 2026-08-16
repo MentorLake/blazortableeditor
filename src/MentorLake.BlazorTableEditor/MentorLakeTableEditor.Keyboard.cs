@@ -90,6 +90,11 @@ public partial class MentorLakeTableEditor
 			default:
 				if (e.Key.Length == 1 && !e.CtrlKey && !e.AltKey && !e.MetaKey)
 				{
+					if (Context.HasValidValuesForColumn(Context.ActiveCell.Col))
+					{
+						break;
+					}
+
 					_editValue = e.Key;
 					_editPos = Context.ActiveCell;
 					_headerEditKind = HeaderEditKind.None;

@@ -22,6 +22,24 @@
 	z-index: 1;
 }
 
+.bte-cell.has-select {
+	padding: 0;
+}
+
+.bte-cell-select {
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 0 2px 0 4px;
+	border: none;
+	outline: none;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+}
+
 .bte-cell:hover {
 	background: #f8fafc;
 }

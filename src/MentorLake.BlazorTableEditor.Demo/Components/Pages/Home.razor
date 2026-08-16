@@ -12,6 +12,7 @@
 		Click a cell to select. Drag to multi-select. Double-click or press Enter/F2 to edit.
 		Arrow keys move the active cell; Shift+Arrow expands selection. Drag the fill handle to copy values.
 		Use the filter button on a column header for Excel-style value filters.
+		Columns with supplied valid values (Category, Status) show a dropdown in each cell; invalid values are marked with an error.
 		Use <strong>Export CSV</strong> / <strong>Import CSV</strong> in the toolbar to save or load spreadsheet data.
 	</p>
 
@@ -22,6 +23,7 @@
 		<div style="height: 600px; width: 1000px;">
 			<MentorLake.BlazorTableEditor.MentorLakeTableEditor
 				Validator="_validator"
+				ColumnValidValues="_columnValidValues"
 				Model="@(new TableDataModel(100, 5))"/>
 		</div>
 	}
@@ -30,6 +32,13 @@
 @code {
 	private bool _showEditor = true;
 	private readonly ITableValidator _validator = new DemoTableValidator();
+
+	private readonly IReadOnlyDictionary<string, IReadOnlyList<string>> _columnValidValues =
+		new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase)
+		{
+			["Category"] = new[] { "Fruit", "Vegetable", "Dairy", "Grain" },
+			["Status"] = new[] { "Open", "Closed", "Pending" }
+		};
 
 	private void OnShowHideEditor()
 	{

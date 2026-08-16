@@ -25,7 +25,10 @@
 			var inClipboard = IsInClipboardSource(row, col);
 			var hasError = Sheet.HasError(row, col);
 			var cell = Sheet.GetValue(row, col);
-			var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, ClipboardMode, hasError);
+			var validValues = Sheet.GetValidValuesForColumn(col);
+			var hasSelect = validValues.Count > 0;
+			var display = Sheet.GetCellDisplay(row, col);
+			var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, ClipboardMode, hasError, hasSelect);
 			var style = BuildCellStyle(left, top, width, height, cell);
 			var title = hasError ? Sheet.GetError(row, col) : null;
 
@@ -40,7 +43,29 @@
 			     @oncontextmenu="e => OnContextMenuAsync(row, col, e)"
 			     @oncontextmenu:preventDefault="true"
 			     @oncontextmenu:stopPropagation="true">
-				@Sheet.GetCellDisplay(row, col)
+				@if (hasSelect)
+				{
+					<select class="bte-cell-select"
+					        value="@display"
+					        title="@title"
+					        @onchange="e => OnSelectChangedAsync(row, col, e)"
+					        @ondblclick:stopPropagation="true"
+					        @onkeydown:stopPropagation="true">
+						@if (!string.IsNullOrEmpty(display) && !ContainsValue(validValues, display))
+						{
+							<option value="@display">@display</option>
+						}
+						<option value=""></option>
+						@foreach (var option in validValues)
+						{
+							<option value="@option">@option</option>
+						}
+					</select>
+				}
+				else
+				{
+					@display
+				}
 			</div>
 		}
 	}
