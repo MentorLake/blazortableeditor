@@ -70,11 +70,11 @@ public partial class TableCellGrid
 		return $"left:{left}px;top:{top}px;width:{right - left}px;height:{bottom - top}px;";
 	}
 
-	private static bool ContainsValue(IReadOnlyList<string> values, string text)
+	private static bool ContainsValue(IReadOnlyList<ValidValueOption> values, string text)
 	{
 		for (var i = 0; i < values.Count; i++)
 		{
-			if (string.Equals(values[i], text, StringComparison.Ordinal))
+			if (string.Equals(values[i].Value, text, StringComparison.Ordinal))
 			{
 				return true;
 			}

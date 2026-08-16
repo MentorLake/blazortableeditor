@@ -9,7 +9,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	[Parameter] public TableDataModel Model { get; set; }
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
 	[Parameter] public ITableValidator Validator { get; set; }
-	[Parameter] public IReadOnlyDictionary<string, IReadOnlyList<string>> ColumnValidValues { get; set; }
+	[Parameter] public IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> ColumnValidValues { get; set; }
 	[Parameter] public bool ShowToolbar { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;

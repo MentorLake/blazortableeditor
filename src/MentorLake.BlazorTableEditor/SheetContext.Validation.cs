@@ -5,15 +5,15 @@ namespace MentorLake.BlazorTableEditor;
 public partial class SheetContext
 {
 	private ITableValidator _validator;
-	private IReadOnlyDictionary<string, IReadOnlyList<string>> _columnValidValues;
+	private IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> _columnValidValues;
 	private readonly Dictionary<CellPosition, string> _validationErrors = new();
-	private static readonly IReadOnlyList<string> EmptyValidValues = Array.Empty<string>();
+	private static readonly IReadOnlyList<ValidValueOption> EmptyValidValues = Array.Empty<ValidValueOption>();
 
 	public IReadOnlyDictionary<CellPosition, string> ValidationErrors => _validationErrors;
 
 	public ITableValidator Validator => _validator;
 
-	public IReadOnlyDictionary<string, IReadOnlyList<string>> ColumnValidValues => _columnValidValues;
+	public IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> ColumnValidValues => _columnValidValues;
 
 	public void SetValidator(ITableValidator validator)
 	{
@@ -21,7 +21,7 @@ public partial class SheetContext
 		Revalidate();
 	}
 
-	public void SetColumnValidValues(IReadOnlyDictionary<string, IReadOnlyList<string>> columnValidValues)
+	public void SetColumnValidValues(IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> columnValidValues)
 	{
 		_columnValidValues = columnValidValues;
 		Revalidate();
@@ -36,7 +36,7 @@ public partial class SheetContext
 		return msg;
 	}
 
-	public IReadOnlyList<string> GetValidValuesForColumn(int col)
+	public IReadOnlyList<ValidValueOption> GetValidValuesForColumn(int col)
 	{
 		if (_columnValidValues is null || col < 0 || col >= Model.ColumnCount)
 		{
@@ -64,6 +64,25 @@ public partial class SheetContext
 	{
 		var values = GetValidValuesForColumn(col);
 		return values.Count > 0;
+	}
+
+	public string ResolveValidValueDisplay(int col, string value)
+	{
+		if (string.IsNullOrEmpty(value))
+		{
+			return value ?? string.Empty;
+		}
+
+		var options = GetValidValuesForColumn(col);
+		for (var i = 0; i < options.Count; i++)
+		{
+			if (string.Equals(options[i].Value, value, StringComparison.Ordinal))
+			{
+				return options[i].Display;
+			}
+		}
+
+		return value;
 	}
 
 	private void Revalidate()
@@ -139,11 +158,11 @@ public partial class SheetContext
 		}
 	}
 
-	private static bool ContainsValidValue(IReadOnlyList<string> validValues, string text)
+	private static bool ContainsValidValue(IReadOnlyList<ValidValueOption> validValues, string text)
 	{
 		for (var i = 0; i < validValues.Count; i++)
 		{
-			if (string.Equals(validValues[i], text, StringComparison.Ordinal))
+			if (string.Equals(validValues[i].Value, text, StringComparison.Ordinal))
 			{
 				return true;
 			}

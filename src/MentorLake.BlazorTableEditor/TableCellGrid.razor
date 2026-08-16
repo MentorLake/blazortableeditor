@@ -27,6 +27,7 @@
 			var cell = Sheet.GetValue(row, col);
 			var validValues = Sheet.GetValidValuesForColumn(col);
 			var hasSelect = validValues.Count > 0;
+			var rawValue = Sheet.GetCellRawValue(row, col);
 			var display = Sheet.GetCellDisplay(row, col);
 			var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, ClipboardMode, hasError, hasSelect);
 			var style = BuildCellStyle(left, top, width, height, cell);
@@ -46,19 +47,19 @@
 				@if (hasSelect)
 				{
 					<select class="bte-cell-select"
-					        value="@display"
+					        value="@rawValue"
 					        title="@title"
 					        @onchange="e => OnSelectChangedAsync(row, col, e)"
 					        @ondblclick:stopPropagation="true"
 					        @onkeydown:stopPropagation="true">
-						@if (!string.IsNullOrEmpty(display) && !ContainsValue(validValues, display))
+						@if (!string.IsNullOrEmpty(rawValue) && !ContainsValue(validValues, rawValue))
 						{
-							<option value="@display">@display</option>
+							<option value="@rawValue">@rawValue</option>
 						}
 						<option value=""></option>
 						@foreach (var option in validValues)
 						{
-							<option value="@option">@option</option>
+							<option value="@option.Value">@option.Display</option>
 						}
 					</select>
 				}

@@ -8,7 +8,7 @@ An AI-generated high-performance, Excel-like table editor component library for 
 - **Full keyboard support** — Arrow keys, Shift+selection, Enter/F2 edit, Tab, Delete, Escape.
 - **Undo / Redo** — Ctrl+Z (undo), Ctrl+Y or Ctrl+Shift+Z (redo), toolbar buttons, and context menu.
 - **Validation** — Pluggable `ITableValidator` interface to mark cells as invalid; invalid cells receive error styling and show messages on hover.
-- **Column valid values** — Supply allowed values by column header name via `ColumnValidValues`; constrained columns use a dropdown editor and reject unknown values.
+- **Column valid values** — Supply allowed values by column header name via `ColumnValidValues` (`ValidValueOption` with separate stored `Value` and user-facing `Display`); constrained columns use a dropdown editor and reject unknown values.
 - **Mouse interactions** — Click/drag selection, double-click edit, column/row resize, drag-fill handle.
 - **Clipboard** — Copy, Cut, Paste with system clipboard (TSV) + internal buffer.
 - **CSV serialization** — `TableDataModel.ToCsv` / `FromCsv`.

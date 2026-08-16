@@ -6,7 +6,13 @@ public partial class SheetContext
 {
 	public CellValue GetValue(int row, int col) => Model.GetCell(row, col);
 
-	public string GetCellDisplay(int row, int col) => GetValue(row, col)?.ToString() ?? string.Empty;
+	public string GetCellRawValue(int row, int col) => GetValue(row, col)?.ToString() ?? string.Empty;
+
+	public string GetCellDisplay(int row, int col)
+	{
+		var raw = GetCellRawValue(row, col);
+		return ResolveValidValueDisplay(col, raw);
+	}
 
 	public void SetValue(int row, int col, object value, string format = null)
 	{
