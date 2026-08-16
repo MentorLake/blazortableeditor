@@ -13,7 +13,7 @@ public partial class MentorLakeTableEditor
 	{
 		try
 		{
-			var csv = Context.Model.ToCsv(includeHeaders: false);
+			var csv = Context.Model.ToCsv(includeHeaders: true);
 			var fileName = $"table-{DateTime.Now:yyyyMMdd-HHmmss}.csv";
 			await _instance.InvokeVoidAsync("downloadText", fileName, csv, "text/csv;charset=utf-8");
 			_csvStatus = $"Exported {fileName}";
