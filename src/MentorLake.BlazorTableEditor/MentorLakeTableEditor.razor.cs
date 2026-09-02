@@ -41,7 +41,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		Context.SetValidator(Validator);
 		Context.SetColumnValidValues(ColumnValidValues);
 		WireContext(Context);
-		RecomputeVisibleRange();
+		ApplyViewportLayout();
 	}
 
 	protected override void OnParametersSet()
@@ -57,7 +57,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			Context.SetValidator(Validator);
 			Context.SetColumnValidValues(ColumnValidValues);
 			WireContext(Context);
-			RecomputeVisibleRange();
+			ApplyViewportLayout();
 		}
 		else
 		{

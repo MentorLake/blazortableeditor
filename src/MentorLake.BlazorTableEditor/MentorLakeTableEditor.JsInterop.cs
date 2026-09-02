@@ -30,7 +30,7 @@ public partial class MentorLakeTableEditor
 			{
 				_viewportWidth = 900;
 				_viewportHeight = 520;
-				RecomputeVisibleRange();
+				ApplyViewportLayout();
 			}
 		}
 	}
@@ -58,7 +58,7 @@ public partial class MentorLakeTableEditor
 		_viewportHeight = Math.Max(1, height);
 		_scrollLeft = Math.Max(0, scrollLeft);
 		_scrollTop = Math.Max(0, scrollTop);
-		RecomputeVisibleRange();
+		ApplyViewportLayout();
 		return InvokeAsync(StateHasChanged);
 	}
 
@@ -78,12 +78,19 @@ public partial class MentorLakeTableEditor
 				_viewportHeight = Math.Max(1, metrics[1]);
 				_scrollLeft = Math.Max(0, metrics[2]);
 				_scrollTop = Math.Max(0, metrics[3]);
-				RecomputeVisibleRange();
+				ApplyViewportLayout();
 			}
 		}
 		catch
 		{
 		}
+	}
+
+	private void ApplyViewportLayout()
+	{
+		var bodyWidth = Math.Max(0, (int)Math.Floor(_viewportWidth) - SheetContext.RowHeaderWidth);
+		Context.SetLayoutBodyWidth(bodyWidth);
+		RecomputeVisibleRange();
 	}
 
 	private async Task WriteClipboardTextAsync(string text)

@@ -118,6 +118,7 @@ public partial class SheetContext
 		Model.Cells = newCells;
 
 		ShiftMap(ColumnWidths, index, insert: true, DefaultColumnWidth);
+		InvalidateColumnLayout();
 		ShiftFiltersAfterColumnInsert(index);
 
 		AdjustSelectionAfterColumnInsert(index);
@@ -172,6 +173,7 @@ public partial class SheetContext
 		Model.Cells = newCells;
 
 		ShiftMapRange(ColumnWidths, startCol, endCol);
+		InvalidateColumnLayout();
 		ShiftFiltersAfterColumnsDelete(startCol, endCol);
 
 		AdjustSelectionAfterColumnsDelete(startCol, endCol);

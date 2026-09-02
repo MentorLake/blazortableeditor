@@ -87,6 +87,8 @@ public partial class SheetContext
 			ColumnWidths[kvp.Key] = kvp.Value;
 		}
 
+		InvalidateColumnLayout();
+
 		ActiveCell = snap.ActiveCell;
 		SelectionAnchor = snap.SelectionAnchor;
 		CurrentSelection = snap.CurrentSelection;
