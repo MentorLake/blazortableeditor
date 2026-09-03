@@ -124,9 +124,44 @@ export function createInstance() {
 				}, 0);
 			};
 
+			const onKeyDown = function (e) {
+				const t = e.target;
+				if (!t) return;
+				const tag = t.tagName;
+				if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || t.isContentEditable) {
+					return;
+				}
+				if (t.closest && t.closest("button, a, label, [role='button'], .bte-toolbar")) {
+					return;
+				}
+
+				switch (e.key) {
+					case "ArrowUp":
+					case "ArrowDown":
+					case "ArrowLeft":
+					case "ArrowRight":
+					case " ":
+					case "PageUp":
+					case "PageDown":
+					case "Home":
+					case "End":
+					case "Tab":
+					case "Backspace":
+						e.preventDefault();
+						break;
+				}
+			};
+
+			const root = viewport.closest(".bte-root");
+			if (root) {
+				root.addEventListener("keydown", onKeyDown);
+			}
+
 			viewport.addEventListener("scroll", onScroll, {passive: true});
 			viewport.addEventListener("mousedown", onPointerDown, true);
 			viewport.addEventListener("click", onClick);
+			this._rootEl = root || null;
+			this._onKeyDown = onKeyDown;
 			this._onScroll = onScroll;
 			this._onPointerDown = onPointerDown;
 			this._onClick = onClick;
@@ -162,6 +197,9 @@ export function createInstance() {
 			if (this._viewport && this._onClick) {
 				this._viewport.removeEventListener("click", this._onClick);
 			}
+			if (this._rootEl && this._onKeyDown) {
+				this._rootEl.removeEventListener("keydown", this._onKeyDown);
+			}
 			if (this._vvPopover && this._onVvToggle) {
 				this._vvPopover.removeEventListener("toggle", this._onVvToggle);
 			}
@@ -177,10 +215,12 @@ export function createInstance() {
 			this._stopSelectionDrag(false);
 			this._stopFillDrag(false);
 			this._viewport = null;
+			this._rootEl = null;
 			this._dotNetRef = null;
 			this._onScroll = null;
 			this._onPointerDown = null;
 			this._onClick = null;
+			this._onKeyDown = null;
 			this._onVvToggle = null;
 			this._vvPopover = null;
 			this._vvCurrentRow = null;
@@ -247,6 +287,21 @@ export function createInstance() {
 			return track.querySelector(
 				`.bte-cell[data-vv-trigger][data-row="${row}"][data-col="${col}"]`
 			);
+		},
+
+		openValidValuePopover: function (row, col) {
+			if (!this._vvPopover || !this._vvPopover.isConnected) {
+				this._bindValidValuePopover();
+			}
+
+			const popover = this._vvPopover;
+			const isOpen = !!(popover && popover.matches && popover.matches(":popover-open"));
+			if (isOpen && this._vvCurrentRow === row && this._vvCurrentCol === col) {
+				return false;
+			}
+
+			this._openValidValuePopover(row, col);
+			return !!(this._vvPopover && this._vvPopover.matches && this._vvPopover.matches(":popover-open"));
 		},
 
 		_openValidValuePopover: function (row, col) {
@@ -1042,4 +1097,44 @@ export function hidePopover(el) {
 
 export function isPopoverOpen(el) {
 	return !!(el && el.matches && el.matches(":popover-open"));
+}
+
+export function bindPopoverToggle(el, dotNetRef, methodName) {
+	if (!el || !dotNetRef || !methodName) {
+		return;
+	}
+	if (el._bteToggleBound) {
+		return;
+	}
+	const handler = function (e) {
+		try {
+			dotNetRef.invokeMethodAsync(methodName, e.newState || "");
+		} catch (_) {
+		}
+	};
+	el.addEventListener("toggle", handler);
+	el._bteToggleBound = true;
+	el._bteToggleHandler = handler;
+}
+
+export function scrollPopoverOptionIntoView(el, index) {
+	if (!el) {
+		return;
+	}
+	const options = el.querySelectorAll(".bte-vv-option");
+	const i = index | 0;
+	if (i < 0 || i >= options.length) {
+		return;
+	}
+	const option = options[i];
+	if (option && typeof option.scrollIntoView === "function") {
+		try {
+			option.scrollIntoView({block: "nearest"});
+		} catch (_) {
+			try {
+				option.scrollIntoView(false);
+			} catch (__) {
+			}
+		}
+	}
 }

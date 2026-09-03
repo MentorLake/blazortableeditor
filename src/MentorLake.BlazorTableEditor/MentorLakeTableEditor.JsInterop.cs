@@ -17,6 +17,11 @@ public partial class MentorLakeTableEditor
 			_jsReady = ok;
 			if (_jsReady)
 			{
+				if (_vvDropdown is not null)
+				{
+					await _vvDropdown.EnsureReadyAsync();
+				}
+
 				await RefreshViewportMetricsAsync();
 				StateHasChanged();
 			}

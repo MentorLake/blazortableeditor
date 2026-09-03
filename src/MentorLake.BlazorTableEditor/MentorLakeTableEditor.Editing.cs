@@ -1,5 +1,6 @@
 using MentorLake.BlazorTableEditor.Models;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
 
@@ -87,6 +88,46 @@ public partial class MentorLakeTableEditor
 		}
 	}
 
+	private void OpenValidValueDropdown(int row = -1, int col = -1)
+	{
+		if (row < 0 || col < 0)
+		{
+			row = Context.ActiveCell.Row;
+			col = Context.ActiveCell.Col;
+		}
+
+		if (!Context.HasValidValuesForColumn(col))
+		{
+			return;
+		}
+
+		Context.SetActiveCell(row, col, notify: false);
+		SyncValidValueDropdownContent(row, col);
+		Context.NotifyStateChanged();
+		_ = OpenValidValueDropdownAsync(row, col);
+	}
+
+	private async Task OpenValidValueDropdownAsync(int row, int col)
+	{
+		if (!_jsReady || _instance is null)
+		{
+			return;
+		}
+
+		try
+		{
+			if (_vvDropdown is not null)
+			{
+				await _vvDropdown.EnsureReadyAsync();
+			}
+
+			await _instance.InvokeVoidAsync("openValidValuePopover", row, col);
+		}
+		catch
+		{
+		}
+	}
+
 	private void OnValidValueSelected(string value)
 	{
 		var row = Context.ActiveCell.Row;
@@ -105,9 +146,7 @@ public partial class MentorLakeTableEditor
 	{
 		if (Context.HasValidValuesForColumn(col))
 		{
-			Context.SetActiveCell(row, col, notify: false);
-			SyncValidValueDropdownContent(row, col);
-			Context.NotifyStateChanged();
+			OpenValidValueDropdown(row, col);
 			return;
 		}
 

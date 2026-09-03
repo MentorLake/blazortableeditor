@@ -37,6 +37,33 @@ public partial class MentorLakeTableEditor
 			}
 		}
 
+		if (_vvDropdown is not null && _vvDropdown.IsOpen)
+		{
+			switch (e.Key)
+			{
+				case "ArrowDown":
+					_vvDropdown.MoveHighlight(1);
+					return;
+				case "ArrowUp":
+					_vvDropdown.MoveHighlight(-1);
+					return;
+				case "Enter":
+				case " ":
+					_ = _vvDropdown.CommitHighlightAsync();
+					return;
+				case "Escape":
+					CloseValidValueDropdown();
+					return;
+				case "ArrowLeft":
+				case "ArrowRight":
+				case "Tab":
+					CloseValidValueDropdown();
+					break;
+				default:
+					return;
+			}
+		}
+
 		switch (e.Key)
 		{
 			case "ArrowRight":
@@ -68,6 +95,13 @@ public partial class MentorLakeTableEditor
 			case "Enter":
 			case "F2":
 				BeginEdit(Context.ActiveCell.Row, Context.ActiveCell.Col);
+				break;
+			case " ":
+				if (Context.HasValidValuesForColumn(Context.ActiveCell.Col))
+				{
+					OpenValidValueDropdown();
+				}
+
 				break;
 			case "Escape":
 				if (IsFilterPopupOpen)

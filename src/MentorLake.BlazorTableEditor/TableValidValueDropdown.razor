@@ -11,12 +11,14 @@
 	@{
 		var current = _currentValue ?? string.Empty;
 		var currentInList = _options.Count > 0 && ContainsValue(_options, current);
+		var itemIndex = 0;
 	}
 
 	@if (_options.Count > 0)
 	{
+		var blankIndex = itemIndex++;
 		<button type="button"
-		        class="bte-vv-option @(current.Length == 0 ? "is-selected" : null)"
+		        class="bte-vv-option @(current.Length == 0 ? "is-selected" : null) @(_isOpen && _highlightIndex == blankIndex ? "is-highlighted" : null)"
 		        popovertarget="@PopoverId"
 		        @onclick="() => SelectAsync(string.Empty)">
 			<span class="bte-vv-option-label bte-vv-option-blank">&nbsp;</span>
@@ -24,8 +26,9 @@
 
 		@if (current.Length > 0 && !currentInList)
 		{
+			var invalidIndex = itemIndex++;
 			<button type="button"
-			        class="bte-vv-option is-selected is-invalid"
+			        class="bte-vv-option is-selected is-invalid @(_isOpen && _highlightIndex == invalidIndex ? "is-highlighted" : null)"
 			        popovertarget="@PopoverId"
 			        @onclick="() => SelectAsync(current)">
 				<span class="bte-vv-option-label" title="@current">@current</span>
@@ -36,8 +39,9 @@
 		{
 			var value = option.Value;
 			var selected = string.Equals(value, current, StringComparison.Ordinal);
+			var optionIndex = itemIndex++;
 			<button type="button"
-			        class="bte-vv-option @(selected ? "is-selected" : null)"
+			        class="bte-vv-option @(selected ? "is-selected" : null) @(_isOpen && _highlightIndex == optionIndex ? "is-highlighted" : null)"
 			        popovertarget="@PopoverId"
 			        @onclick="() => SelectAsync(value)">
 				<span class="bte-vv-option-label" title="@option.Display">@option.Display</span>

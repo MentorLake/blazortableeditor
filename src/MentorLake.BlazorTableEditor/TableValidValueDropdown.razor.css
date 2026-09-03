@@ -64,6 +64,17 @@
 	background: #d2e3fc;
 }
 
+.bte-vv-option.is-highlighted {
+	background: #d2e3fc;
+	color: #174ea6;
+	outline: 1px solid #1a73e8;
+	outline-offset: -1px;
+}
+
+.bte-vv-option.is-highlighted.is-selected {
+	background: #c2d7f7;
+}
+
 .bte-vv-option.is-invalid {
 	color: #d93025;
 }

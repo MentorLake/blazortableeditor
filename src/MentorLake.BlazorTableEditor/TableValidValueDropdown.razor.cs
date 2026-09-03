@@ -14,9 +14,16 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 
 	private ElementReference _popoverRef;
 	private IJSObjectReference _module;
+	private DotNetObjectReference<TableValidValueDropdown> _dotNetRef;
 	private IReadOnlyList<ValidValueOption> _options = Array.Empty<ValidValueOption>();
 	private string _currentValue = string.Empty;
+	private List<string> _itemValues = new();
+	private int _highlightIndex;
+	private bool _isOpen;
 	private bool _disposed;
+	private bool _toggleBound;
+
+	public bool IsOpen => _isOpen;
 
 	private string DropdownStyle =>
 		$"--bte-vv-max-visible:{Math.Max(1, MaxVisibleItems)};";
@@ -33,10 +40,11 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 
 		_options = nextOptions;
 		_currentValue = nextCurrent;
+		RebuildItems();
 		_ = InvokeAsync(StateHasChanged);
 	}
 
-	public async Task ShowAsync()
+	public async Task EnsureReadyAsync()
 	{
 		await EnsureModuleAsync();
 		if (_disposed || _module is null)
@@ -44,9 +52,27 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 			return;
 		}
 
+		await BindToggleAsync();
+	}
+
+	public async Task ShowAsync()
+	{
+		await EnsureReadyAsync();
+		if (_disposed || _module is null)
+		{
+			return;
+		}
+
 		try
 		{
-			await _module.InvokeVoidAsync("showPopover", _popoverRef);
+			var opened = await _module.InvokeAsync<bool>("showPopover", _popoverRef);
+			if (opened)
+			{
+				_isOpen = true;
+				EnsureHighlightInRange();
+				await ScrollHighlightIntoViewAsync();
+				await InvokeAsync(StateHasChanged);
+			}
 		}
 		catch
 		{
@@ -64,10 +90,55 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 		try
 		{
 			await _module.InvokeVoidAsync("hidePopover", _popoverRef);
+			_isOpen = false;
+			await InvokeAsync(StateHasChanged);
 		}
 		catch
 		{
 		}
+	}
+
+	public void MoveHighlight(int delta)
+	{
+		if (!_isOpen || _itemValues.Count == 0 || delta == 0)
+		{
+			return;
+		}
+
+		var count = _itemValues.Count;
+		_highlightIndex = ((_highlightIndex + delta) % count + count) % count;
+		_ = ScrollHighlightIntoViewAsync();
+		_ = InvokeAsync(StateHasChanged);
+	}
+
+	public async Task CommitHighlightAsync()
+	{
+		if (!_isOpen || _itemValues.Count == 0)
+		{
+			return;
+		}
+
+		EnsureHighlightInRange();
+		var value = _itemValues[_highlightIndex] ?? string.Empty;
+		await SelectAsync(value);
+	}
+
+	[JSInvokable]
+	public void OnPopoverToggle(string newState)
+	{
+		var open = string.Equals(newState, "open", StringComparison.Ordinal);
+		if (_isOpen == open)
+		{
+			return;
+		}
+
+		_isOpen = open;
+		if (open)
+		{
+			EnsureHighlightInRange();
+		}
+
+		_ = InvokeAsync(StateHasChanged);
 	}
 
 	private async Task EnsureModuleAsync()
@@ -89,9 +160,97 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 		}
 	}
 
+	private async Task BindToggleAsync()
+	{
+		if (_toggleBound || _module is null)
+		{
+			return;
+		}
+
+		_dotNetRef ??= DotNetObjectReference.Create(this);
+		try
+		{
+			await _module.InvokeVoidAsync("bindPopoverToggle", _popoverRef, _dotNetRef, "OnPopoverToggle");
+			_toggleBound = true;
+		}
+		catch
+		{
+		}
+	}
+
+	private async Task ScrollHighlightIntoViewAsync()
+	{
+		if (_module is null || !_isOpen)
+		{
+			return;
+		}
+
+		try
+		{
+			await _module.InvokeVoidAsync("scrollPopoverOptionIntoView", _popoverRef, _highlightIndex);
+		}
+		catch
+		{
+		}
+	}
+
+	private void RebuildItems()
+	{
+		_itemValues = new List<string>();
+		_itemValues.Add(string.Empty);
+
+		var current = _currentValue ?? string.Empty;
+		var currentInList = _options.Count > 0 && ContainsValue(_options, current);
+		if (current.Length > 0 && !currentInList)
+		{
+			_itemValues.Add(current);
+		}
+
+		for (var i = 0; i < _options.Count; i++)
+		{
+			_itemValues.Add(_options[i].Value ?? string.Empty);
+		}
+
+		_highlightIndex = FindValueIndex(current);
+		EnsureHighlightInRange();
+	}
+
+	private int FindValueIndex(string value)
+	{
+		var text = value ?? string.Empty;
+		for (var i = 0; i < _itemValues.Count; i++)
+		{
+			if (string.Equals(_itemValues[i], text, StringComparison.Ordinal))
+			{
+				return i;
+			}
+		}
+
+		return 0;
+	}
+
+	private void EnsureHighlightInRange()
+	{
+		if (_itemValues.Count == 0)
+		{
+			_highlightIndex = 0;
+			return;
+		}
+
+		if (_highlightIndex < 0 || _highlightIndex >= _itemValues.Count)
+		{
+			_highlightIndex = FindValueIndex(_currentValue);
+			if (_highlightIndex < 0 || _highlightIndex >= _itemValues.Count)
+			{
+				_highlightIndex = 0;
+			}
+		}
+	}
+
 	private async Task SelectAsync(string value)
 	{
 		await OnSelected.InvokeAsync(value ?? string.Empty);
+		await HideAsync();
 	}
 
 	private static bool ContainsValue(IReadOnlyList<ValidValueOption> values, string text)
@@ -115,6 +274,13 @@ public partial class TableValidValueDropdown : IAsyncDisposable
 		}
 
 		_disposed = true;
+		_isOpen = false;
+		if (_dotNetRef is not null)
+		{
+			_dotNetRef.Dispose();
+			_dotNetRef = null;
+		}
+
 		if (_module is not null)
 		{
 			try
