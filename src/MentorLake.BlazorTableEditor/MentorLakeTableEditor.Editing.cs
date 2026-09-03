@@ -53,100 +53,23 @@ public partial class MentorLakeTableEditor
 	private void OnCellContextMenuFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
 		OpenContextMenu(args.Mouse, args.Row, args.Col);
 
-	private readonly string _vvPopoverId = "bte-vv-" + Guid.NewGuid().ToString("N");
-	private TableValidValueDropdown _vvDropdown;
-
-	private void SyncValidValueDropdownContent(int row = -1, int col = -1)
+	private void OnDropdownChangedFromChild((int Row, int Col, string Value) args)
 	{
-		if (_vvDropdown is null)
-		{
-			return;
-		}
-
-		if (row < 0 || col < 0)
-		{
-			row = Context.ActiveCell.Row;
-			col = Context.ActiveCell.Col;
-		}
-
-		if (!Context.HasValidValuesForColumn(col))
-		{
-			_vvDropdown.SetContent(Array.Empty<ValidValueOption>(), string.Empty);
-			return;
-		}
-
-		var options = Context.GetValidValuesForColumn(col) ?? Array.Empty<ValidValueOption>();
-		var current = Context.GetCellRawValue(row, col) ?? string.Empty;
-		_vvDropdown.SetContent(options, current);
-	}
-
-	private void CloseValidValueDropdown()
-	{
-		if (_vvDropdown is not null)
-		{
-			_ = _vvDropdown.HideAsync();
-		}
-	}
-
-	private void OpenValidValueDropdown(int row = -1, int col = -1)
-	{
-		if (row < 0 || col < 0)
-		{
-			row = Context.ActiveCell.Row;
-			col = Context.ActiveCell.Col;
-		}
-
-		if (!Context.HasValidValuesForColumn(col))
-		{
-			return;
-		}
-
-		Context.SetActiveCell(row, col, notify: false);
-		SyncValidValueDropdownContent(row, col);
-		Context.NotifyStateChanged();
-		_ = OpenValidValueDropdownAsync(row, col);
-	}
-
-	private async Task OpenValidValueDropdownAsync(int row, int col)
-	{
-		if (!_jsReady || _instance is null)
-		{
-			return;
-		}
-
-		try
-		{
-			if (_vvDropdown is not null)
-			{
-				await _vvDropdown.EnsureReadyAsync();
-			}
-
-			await _instance.InvokeVoidAsync("openValidValuePopover", row, col);
-		}
-		catch
-		{
-		}
-	}
-
-	private void OnValidValueSelected(string value)
-	{
-		var row = Context.ActiveCell.Row;
-		var col = Context.ActiveCell.Col;
 		if (_isEditing)
 		{
 			CommitEdit();
 		}
 
-		Context.SetValue(row, col, value ?? string.Empty);
-		SyncValidValueDropdownContent(row, col);
-		_ = FocusRootAsync();
+		Context.SetActiveCell(args.Row, args.Col);
+		Context.SetValue(args.Row, args.Col, args.Value);
 	}
 
 	private void BeginEdit(int row, int col)
 	{
 		if (Context.HasValidValuesForColumn(col))
 		{
-			OpenValidValueDropdown(row, col);
+			Context.SetActiveCell(row, col);
+			_ = OpenActiveCellSelectAsync();
 			return;
 		}
 
@@ -165,6 +88,24 @@ public partial class MentorLakeTableEditor
 		StateHasChanged();
 	}
 
+	private async Task OpenActiveCellSelectAsync()
+	{
+		if (!_jsReady || _instance is null)
+		{
+			return;
+		}
+
+		try
+		{
+			await InvokeAsync(StateHasChanged);
+			await Task.Yield();
+			await _instance.InvokeVoidAsync("openActiveCellSelect");
+		}
+		catch
+		{
+		}
+	}
+
 	private void BeginHeaderEdit(HeaderEditKind kind, int index, bool selectHeader = true)
 	{
 		if (kind != HeaderEditKind.Column || index < 0 || index >= Context.Model.ColumnCount)
@@ -174,7 +115,6 @@ public partial class MentorLakeTableEditor
 
 		if (_isEditing)
 		{
-			// Already editing this same header — ignore repeated dblclick.
 			if (_headerEditKind == kind && _headerEditIndex == index)
 			{
 				return;

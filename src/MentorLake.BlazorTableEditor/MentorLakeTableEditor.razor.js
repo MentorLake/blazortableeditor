@@ -19,7 +19,6 @@ export function createInstance() {
 			this._rafNotify = 0;
 			this._pendingNotify = false;
 			this._resizeRaf = 0;
-			this._resizePending = null;
 
 			const self = this;
 
@@ -85,43 +84,13 @@ export function createInstance() {
 					const row = parseInt(cell.getAttribute("data-row"), 10);
 					const col = parseInt(cell.getAttribute("data-col"), 10);
 					if (!Number.isFinite(row) || !Number.isFinite(col)) return;
-					if (cell.hasAttribute("data-vv-trigger")) {
-						self._prepareValidValuePopoverClick(row, col);
-					} else {
-						self._vvSkipClickOpen = false;
-					}
+					const alreadyActive = cell.classList.contains("is-active");
+					const hasSelect = cell.classList.contains("has-select");
+					self._pendingDropdownOpen = (!e.shiftKey && alreadyActive && hasSelect)
+						? { row, col }
+						: null;
 					self._beginSelectionDrag(row, col, !!e.shiftKey);
 				}
-			};
-
-			const onClick = function (e) {
-				if (e.button != null && e.button !== 0) return;
-				if (e.shiftKey) return;
-				if (self._selDragMoved) return;
-
-				const cell = e.target.closest && e.target.closest(".bte-cell[data-vv-trigger]");
-				if (!cell) return;
-
-				if (self._vvSkipClickOpen) {
-					self._vvSkipClickOpen = false;
-					return;
-				}
-
-				const row = parseInt(cell.getAttribute("data-row"), 10);
-				const col = parseInt(cell.getAttribute("data-col"), 10);
-				if (!Number.isFinite(row) || !Number.isFinite(col)) return;
-
-				// Defer so light-dismiss and Blazor cell re-render settle first.
-				const openRow = row;
-				const openCol = col;
-				setTimeout(function () {
-					if (self._selDragMoved) return;
-					if (self._vvSkipClickOpen) {
-						self._vvSkipClickOpen = false;
-						return;
-					}
-					self._openValidValuePopover(openRow, openCol);
-				}, 0);
 			};
 
 			const onKeyDown = function (e) {
@@ -158,16 +127,12 @@ export function createInstance() {
 			}
 
 			viewport.addEventListener("scroll", onScroll, {passive: true});
-			viewport.addEventListener("mousedown", onPointerDown, true);
-			viewport.addEventListener("click", onClick);
+			document.addEventListener("mousedown", onPointerDown, true);
 			this._rootEl = root || null;
 			this._onKeyDown = onKeyDown;
 			this._onScroll = onScroll;
 			this._onPointerDown = onPointerDown;
-			this._onClick = onClick;
-			this._vvCurrentRow = null;
-			this._vvCurrentCol = null;
-			this._bindValidValuePopover();
+			this._pickerSelect = null;
 
 			if (typeof ResizeObserver !== "undefined") {
 				const ro = new ResizeObserver(function () {
@@ -191,18 +156,13 @@ export function createInstance() {
 			if (this._viewport && this._onScroll) {
 				this._viewport.removeEventListener("scroll", this._onScroll);
 			}
-			if (this._viewport && this._onPointerDown) {
-				this._viewport.removeEventListener("mousedown", this._onPointerDown, true);
-			}
-			if (this._viewport && this._onClick) {
-				this._viewport.removeEventListener("click", this._onClick);
+			if (this._onPointerDown) {
+				document.removeEventListener("mousedown", this._onPointerDown, true);
 			}
 			if (this._rootEl && this._onKeyDown) {
 				this._rootEl.removeEventListener("keydown", this._onKeyDown);
 			}
-			if (this._vvPopover && this._onVvToggle) {
-				this._vvPopover.removeEventListener("toggle", this._onVvToggle);
-			}
+			this._unbindPickerSelect();
 			if (this._ro) {
 				this._ro.disconnect();
 				this._ro = null;
@@ -219,129 +179,48 @@ export function createInstance() {
 			this._dotNetRef = null;
 			this._onScroll = null;
 			this._onPointerDown = null;
-			this._onClick = null;
 			this._onKeyDown = null;
-			this._onVvToggle = null;
-			this._vvPopover = null;
-			this._vvCurrentRow = null;
-			this._vvCurrentCol = null;
-			this._vvSkipClickOpen = false;
 			this._pendingNotify = false;
+			this._pickerSelect = null;
 		},
 
-		_bindValidValuePopover: function () {
-			if (this._vvPopover && this._onVvToggle) {
-				this._vvPopover.removeEventListener("toggle", this._onVvToggle);
-			}
+		_unbindPickerSelect: function () {
+			this._pickerSelect = null;
+		},
 
-			const root = this._getRoot();
-			const popover = root ? root.querySelector(".bte-vv-dropdown") : null;
-			this._vvPopover = popover || null;
-			if (!popover) {
-				this._onVvToggle = null;
-				return;
-			}
-
-			const self = this;
-			const onToggle = function (e) {
-				if (e.newState === "closed") {
-					self._vvCurrentRow = null;
-					self._vvCurrentCol = null;
+		_closeCellPicker: function () {
+			const select = this._pickerSelect ||
+				(document.activeElement && document.activeElement.matches &&
+					document.activeElement.matches("select.bte-cell-select")
+					? document.activeElement
+					: null);
+			this._unbindPickerSelect();
+			if (select) {
+				try {
+					select.blur();
+				} catch (_) {
 				}
-			};
-			popover.addEventListener("toggle", onToggle);
-			this._onVvToggle = onToggle;
+			}
 		},
 
-		_prepareValidValuePopoverClick: function (row, col) {
-			if (!this._vvPopover || !this._vvPopover.isConnected) {
-				this._bindValidValuePopover();
-			}
-
-			const popover = this._vvPopover;
-			const isOpen = !!(popover && popover.matches && popover.matches(":popover-open"));
-			const same =
-				isOpen &&
-				this._vvCurrentRow === row &&
-				this._vvCurrentCol === col;
-
-			if (!same) {
-				this._vvSkipClickOpen = false;
-				return;
-			}
-
-			this._vvSkipClickOpen = true;
-			try {
-				popover.hidePopover();
-			} catch (_) {
-			}
-			this._vvCurrentRow = null;
-			this._vvCurrentCol = null;
-		},
-
-		_findValidValueTrigger: function (row, col) {
+		openActiveCellSelect: function () {
 			const track = this._getCellTrack();
-			if (!track) {
-				return null;
-			}
-			return track.querySelector(
-				`.bte-cell[data-vv-trigger][data-row="${row}"][data-col="${col}"]`
-			);
-		},
+			if (!track) return false;
+			const select = track.querySelector(".bte-cell.is-active select.bte-cell-select");
+			if (!select) return false;
 
-		openValidValuePopover: function (row, col) {
-			if (!this._vvPopover || !this._vvPopover.isConnected) {
-				this._bindValidValuePopover();
-			}
+			this._unbindPickerSelect();
+			this._pickerSelect = select;
 
-			const popover = this._vvPopover;
-			const isOpen = !!(popover && popover.matches && popover.matches(":popover-open"));
-			if (isOpen && this._vvCurrentRow === row && this._vvCurrentCol === col) {
+			try {
+				select.focus({preventScroll: true});
+				if (typeof select.showPicker === "function") {
+					select.showPicker();
+				}
+				return true;
+			} catch (_) {
 				return false;
 			}
-
-			this._openValidValuePopover(row, col);
-			return !!(this._vvPopover && this._vvPopover.matches && this._vvPopover.matches(":popover-open"));
-		},
-
-		_openValidValuePopover: function (row, col) {
-			if (!this._vvPopover || !this._vvPopover.isConnected) {
-				this._bindValidValuePopover();
-			}
-
-			const popover = this._vvPopover;
-			if (!popover || typeof popover.showPopover !== "function") {
-				return;
-			}
-
-			const cell = this._findValidValueTrigger(row, col);
-			if (!cell) {
-				return;
-			}
-
-			const anchorName = `--bte-vv-r${row}c${col}`;
-			const isOpen = !!(popover.matches && popover.matches(":popover-open"));
-
-			popover.style.positionAnchor = anchorName;
-			try {
-				popover.showPopover({source: cell});
-			} catch (_) {
-				try {
-					if (isOpen) {
-						popover.hidePopover();
-					}
-					popover.showPopover({source: cell});
-				} catch (__) {
-					try {
-						popover.showPopover();
-					} catch (___) {
-						return;
-					}
-				}
-			}
-
-			this._vvCurrentRow = row;
-			this._vvCurrentCol = col;
 		},
 
 		startColumnResize: function (dotNetRef, columnIndex, startClientX, startWidth) {
@@ -815,10 +694,12 @@ export function createInstance() {
 			this._stopSelectionDrag(false);
 			this._stopFillDrag(false);
 			this._stopResize();
+			this._closeCellPicker();
 
 			this._selecting = true;
 			this._selDragMoved = false;
 			const root = this._getRoot();
+			if (root) root.classList.add("is-selecting");
 			if (shiftKey && root) {
 				const ar = parseInt(root.getAttribute("data-anchor-row"), 10);
 				const ac = parseInt(root.getAttribute("data-anchor-col"), 10);
@@ -831,6 +712,21 @@ export function createInstance() {
 			this._selEndRow = row;
 			this._selEndCol = col;
 			this._applySelectionVisual();
+
+			if (root) {
+				root.setAttribute("data-active-row", String(this._selAnchorRow));
+				root.setAttribute("data-active-col", String(this._selAnchorCol));
+				root.setAttribute("data-anchor-row", String(this._selAnchorRow));
+				root.setAttribute("data-anchor-col", String(this._selAnchorCol));
+				const minR = Math.min(this._selAnchorRow, this._selEndRow);
+				const maxR = Math.max(this._selAnchorRow, this._selEndRow);
+				const minC = Math.min(this._selAnchorCol, this._selEndCol);
+				const maxC = Math.max(this._selAnchorCol, this._selEndCol);
+				root.setAttribute("data-sel-r0", String(minR));
+				root.setAttribute("data-sel-r1", String(maxR));
+				root.setAttribute("data-sel-c0", String(minC));
+				root.setAttribute("data-sel-c1", String(maxC));
+			}
 
 			if (this._dotNetRef) {
 				this._dotNetRef.invokeMethodAsync(
@@ -882,8 +778,27 @@ export function createInstance() {
 				this._selUp = null;
 			}
 
+			const root = this._getRoot();
+			if (root) root.classList.remove("is-selecting");
+
+			const pendingOpen = this._pendingDropdownOpen;
+			this._pendingDropdownOpen = null;
+
 			if (!this._selecting) return;
 			this._selecting = false;
+
+			if (commit && root) {
+				const minR = Math.min(this._selAnchorRow, this._selEndRow);
+				const maxR = Math.max(this._selAnchorRow, this._selEndRow);
+				const minC = Math.min(this._selAnchorCol, this._selEndCol);
+				const maxC = Math.max(this._selAnchorCol, this._selEndCol);
+				root.setAttribute("data-sel-r0", String(minR));
+				root.setAttribute("data-sel-r1", String(maxR));
+				root.setAttribute("data-sel-c0", String(minC));
+				root.setAttribute("data-sel-c1", String(maxC));
+				root.setAttribute("data-active-row", String(this._selAnchorRow));
+				root.setAttribute("data-active-col", String(this._selAnchorCol));
+			}
 
 			if (commit && this._dotNetRef) {
 				this._dotNetRef.invokeMethodAsync(
@@ -891,6 +806,25 @@ export function createInstance() {
 					this._selEndRow,
 					this._selEndCol
 				).catch(() => {});
+			}
+
+			if (commit && !this._selDragMoved && pendingOpen) {
+				const openRow = pendingOpen.row;
+				const openCol = pendingOpen.col;
+				if (openRow === this._selEndRow && openCol === this._selEndCol) {
+					const self = this;
+					setTimeout(function () {
+						self.openActiveCellSelect();
+					}, 0);
+					return;
+				}
+			}
+
+			if (commit && root) {
+				try {
+					root.focus({preventScroll: true});
+				} catch (_) {
+				}
 			}
 		},
 
@@ -1097,44 +1031,4 @@ export function hidePopover(el) {
 
 export function isPopoverOpen(el) {
 	return !!(el && el.matches && el.matches(":popover-open"));
-}
-
-export function bindPopoverToggle(el, dotNetRef, methodName) {
-	if (!el || !dotNetRef || !methodName) {
-		return;
-	}
-	if (el._bteToggleBound) {
-		return;
-	}
-	const handler = function (e) {
-		try {
-			dotNetRef.invokeMethodAsync(methodName, e.newState || "");
-		} catch (_) {
-		}
-	};
-	el.addEventListener("toggle", handler);
-	el._bteToggleBound = true;
-	el._bteToggleHandler = handler;
-}
-
-export function scrollPopoverOptionIntoView(el, index) {
-	if (!el) {
-		return;
-	}
-	const options = el.querySelectorAll(".bte-vv-option");
-	const i = index | 0;
-	if (i < 0 || i >= options.length) {
-		return;
-	}
-	const option = options[i];
-	if (option && typeof option.scrollIntoView === "function") {
-		try {
-			option.scrollIntoView({block: "nearest"});
-		} catch (_) {
-			try {
-				option.scrollIntoView(false);
-			} catch (__) {
-			}
-		}
-	}
 }

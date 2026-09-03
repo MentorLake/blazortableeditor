@@ -25,48 +25,49 @@
 			var inClipboard = IsInClipboardSource(row, col);
 			var hasError = Sheet.HasError(row, col);
 			var cell = Sheet.GetValue(row, col);
-			var hasSelect = Sheet.HasValidValuesForColumn(col);
+			var validValues = Sheet.GetValidValuesForColumn(col);
+			var hasSelect = validValues.Count > 0;
+			var rawValue = Sheet.GetCellRawValue(row, col);
 			var display = Sheet.GetCellDisplay(row, col);
 			var css = BuildCellClass(isActive, isSelected, inFill, inClipboard, ClipboardMode, hasError, hasSelect);
 			var style = BuildCellStyle(left, top, width, height, cell);
 			var title = hasError ? Sheet.GetError(row, col) : null;
 
-			@if (hasSelect)
-			{
-				var anchorStyle = style + $"anchor-name:--bte-vv-r{row}c{col};";
-				<button type="button"
-				        class="@css"
-				        style="@anchorStyle"
-				        title="@title"
-				        data-row="@row"
-				        data-col="@col"
-				        data-vv-trigger="1"
-				        @onmousedown="e => OnCellMouseDownAsync(row, col, e)"
-				        @onmouseenter="() => OnCellMouseEnterAsync(row, col)"
-				        @ondblclick="() => OnDoubleClickAsync(row, col)"
-				        @oncontextmenu="e => OnContextMenuAsync(row, col, e)"
-				        @oncontextmenu:preventDefault="true"
-				        @oncontextmenu:stopPropagation="true">
-					<span class="bte-cell-value">@display</span>
-					<span class="bte-cell-vv-caret" aria-hidden="true"></span>
-				</button>
-			}
-			else
-			{
-				<div class="@css"
-				     style="@style"
-				     title="@title"
-				     data-row="@row"
-				     data-col="@col"
-				     @onmousedown="e => OnCellMouseDownAsync(row, col, e)"
-				     @onmouseenter="() => OnCellMouseEnterAsync(row, col)"
-				     @ondblclick="() => OnDoubleClickAsync(row, col)"
-				     @oncontextmenu="e => OnContextMenuAsync(row, col, e)"
-				     @oncontextmenu:preventDefault="true"
-				     @oncontextmenu:stopPropagation="true">
+			<div class="@css"
+			     style="@style"
+			     title="@title"
+			     data-row="@row"
+			     data-col="@col"
+			     @onmousedown="@(e => OnCellMouseDownAsync(row, col, e))"
+			     @onmouseenter="() => OnCellMouseEnterAsync(row, col)"
+			     @ondblclick="() => OnDoubleClickAsync(row, col)"
+			     @oncontextmenu="e => OnContextMenuAsync(row, col, e)"
+			     @oncontextmenu:preventDefault="true"
+			     @oncontextmenu:stopPropagation="true">
+				@if (hasSelect)
+				{
+					<select class="bte-cell-select"
+					        value="@rawValue"
+					        title="@title"
+					        @onchange="e => OnSelectChangedAsync(row, col, e)"
+					        @ondblclick:stopPropagation="true"
+					        @onkeydown:stopPropagation="true">
+						@if (!string.IsNullOrEmpty(rawValue) && !ContainsValue(validValues, rawValue))
+						{
+							<option value="@rawValue">@rawValue</option>
+						}
+						<option value=""></option>
+						@foreach (var option in validValues)
+						{
+							<option value="@option.Value">@option.Display</option>
+						}
+					</select>
+				}
+				else
+				{
 					@display
-				</div>
-			}
+				}
+			</div>
 		}
 	}
 

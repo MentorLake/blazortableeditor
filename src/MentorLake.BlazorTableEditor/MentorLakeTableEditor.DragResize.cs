@@ -14,9 +14,7 @@ public partial class MentorLakeTableEditor
 		}
 
 		_isSelecting = true;
-		Context.SetActiveCell(row, col, shiftKey, notify: false);
-		SyncValidValueDropdownContent(row, col);
-		_ = FocusRootAsync();
+		Context.SetActiveCell(row, col, shiftKey);
 		return Task.CompletedTask;
 	}
 
@@ -24,14 +22,7 @@ public partial class MentorLakeTableEditor
 	public Task OnSelectionDragEnd(int row, int col)
 	{
 		_isSelecting = false;
-		Context.UpdateSelectionTo(row, col, notify: false);
-		SyncValidValueDropdownContent(Context.ActiveCell.Row, Context.ActiveCell.Col);
-		_ = FocusRootAsync();
-		_ = InvokeAsync(async () =>
-		{
-			await Task.Yield();
-			Context.NotifyStateChanged();
-		});
+		Context.UpdateSelectionTo(row, col);
 		return Task.CompletedTask;
 	}
 
