@@ -52,22 +52,62 @@ public partial class MentorLakeTableEditor
 	private void OnCellContextMenuFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
 		OpenContextMenu(args.Mouse, args.Row, args.Col);
 
-	private void OnDropdownChangedFromChild((int Row, int Col, string Value) args)
+	private readonly string _vvPopoverId = "bte-vv-" + Guid.NewGuid().ToString("N");
+	private TableValidValueDropdown _vvDropdown;
+
+	private void SyncValidValueDropdownContent(int row = -1, int col = -1)
 	{
+		if (_vvDropdown is null)
+		{
+			return;
+		}
+
+		if (row < 0 || col < 0)
+		{
+			row = Context.ActiveCell.Row;
+			col = Context.ActiveCell.Col;
+		}
+
+		if (!Context.HasValidValuesForColumn(col))
+		{
+			_vvDropdown.SetContent(Array.Empty<ValidValueOption>(), string.Empty);
+			return;
+		}
+
+		var options = Context.GetValidValuesForColumn(col) ?? Array.Empty<ValidValueOption>();
+		var current = Context.GetCellRawValue(row, col) ?? string.Empty;
+		_vvDropdown.SetContent(options, current);
+	}
+
+	private void CloseValidValueDropdown()
+	{
+		if (_vvDropdown is not null)
+		{
+			_ = _vvDropdown.HideAsync();
+		}
+	}
+
+	private void OnValidValueSelected(string value)
+	{
+		var row = Context.ActiveCell.Row;
+		var col = Context.ActiveCell.Col;
 		if (_isEditing)
 		{
 			CommitEdit();
 		}
 
-		Context.SetActiveCell(args.Row, args.Col);
-		Context.SetValue(args.Row, args.Col, args.Value);
+		Context.SetValue(row, col, value ?? string.Empty);
+		SyncValidValueDropdownContent(row, col);
+		_ = FocusRootAsync();
 	}
 
 	private void BeginEdit(int row, int col)
 	{
 		if (Context.HasValidValuesForColumn(col))
 		{
-			Context.SetActiveCell(row, col);
+			Context.SetActiveCell(row, col, notify: false);
+			SyncValidValueDropdownContent(row, col);
+			Context.NotifyStateChanged();
 			return;
 		}
 

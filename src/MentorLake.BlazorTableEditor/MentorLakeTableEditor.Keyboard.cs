@@ -40,22 +40,30 @@ public partial class MentorLakeTableEditor
 		switch (e.Key)
 		{
 			case "ArrowRight":
+				CloseValidValueDropdown();
 				Context.SetActiveCell(Context.ActiveCell.Row, Context.ActiveCell.Col + 1, e.ShiftKey);
+				SyncValidValueDropdownContent();
 				break;
 			case "ArrowLeft":
+				CloseValidValueDropdown();
 				Context.SetActiveCell(Context.ActiveCell.Row, Context.ActiveCell.Col - 1, e.ShiftKey);
+				SyncValidValueDropdownContent();
 				break;
 			case "ArrowDown":
+				CloseValidValueDropdown();
 				Context.SetActiveCell(
 					Context.FindNextVisibleRow(Context.ActiveCell.Row, 1),
 					Context.ActiveCell.Col,
 					e.ShiftKey);
+				SyncValidValueDropdownContent();
 				break;
 			case "ArrowUp":
+				CloseValidValueDropdown();
 				Context.SetActiveCell(
 					Context.FindNextVisibleRow(Context.ActiveCell.Row, -1),
 					Context.ActiveCell.Col,
 					e.ShiftKey);
+				SyncValidValueDropdownContent();
 				break;
 			case "Enter":
 			case "F2":
@@ -82,10 +90,13 @@ public partial class MentorLakeTableEditor
 				break;
 			case "Delete":
 			case "Backspace":
+				CloseValidValueDropdown();
 				Context.ClearSelectionValues();
 				break;
 			case "Tab":
+				CloseValidValueDropdown();
 				Context.SetActiveCell(Context.ActiveCell.Row, Context.ActiveCell.Col + (e.ShiftKey ? -1 : 1));
+				SyncValidValueDropdownContent();
 				break;
 			default:
 				if (e.Key.Length == 1 && !e.CtrlKey && !e.AltKey && !e.MetaKey)

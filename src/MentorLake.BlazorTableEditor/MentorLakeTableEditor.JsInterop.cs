@@ -42,6 +42,8 @@ public partial class MentorLakeTableEditor
 			CloseContextMenu();
 		}
 
+		CloseValidValueDropdown();
+
 		if (!_jsReady)
 		{
 			await EnsureJsInitializedAsync();

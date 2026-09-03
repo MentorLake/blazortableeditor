@@ -18,7 +18,9 @@ public partial class MentorLakeTableEditor
 		}
 
 		_isSelecting = true;
-		Context.SetActiveCell(row, col, e.ShiftKey);
+		Context.SetActiveCell(row, col, e.ShiftKey, notify: false);
+		SyncValidValueDropdownContent(row, col);
+		Context.NotifyStateChanged();
 		_ = FocusRootAsync();
 	}
 
@@ -85,9 +87,15 @@ public partial class MentorLakeTableEditor
 			Context.EndDragFill();
 		}
 
+		var wasSelecting = _isSelecting;
 		_isSelecting = false;
 
-		if (hadPressedHeader)
+		if (wasSelecting)
+		{
+			SyncValidValueDropdownContent();
+			Context.NotifyStateChanged();
+		}
+		else if (hadPressedHeader)
 		{
 			StateHasChanged();
 		}
@@ -119,6 +127,7 @@ public partial class MentorLakeTableEditor
 
 		_pressedColHeader = col;
 		_pressedRowHeader = null;
+		CloseValidValueDropdown();
 		Context.SelectColumn(col, e.ShiftKey);
 		_isSelecting = false;
 		_ = FocusRootAsync();
@@ -138,6 +147,7 @@ public partial class MentorLakeTableEditor
 
 		_pressedRowHeader = row;
 		_pressedColHeader = null;
+		CloseValidValueDropdown();
 		Context.SelectRow(row, e.ShiftKey);
 		_isSelecting = false;
 		_ = FocusRootAsync();

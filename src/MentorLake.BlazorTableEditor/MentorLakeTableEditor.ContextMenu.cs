@@ -20,6 +20,7 @@ public partial class MentorLakeTableEditor
 		}
 
 		CloseFilterPopup();
+		CloseValidValueDropdown();
 
 		row = Math.Clamp(row, 0, Math.Max(0, Context.Model.RowCount - 1));
 		col = Math.Clamp(col, 0, Math.Max(0, Context.Model.ColumnCount - 1));
@@ -51,6 +52,7 @@ public partial class MentorLakeTableEditor
 		}
 
 		CloseContextMenu();
+		CloseValidValueDropdown();
 		_pressedColHeader = null;
 		_isSelecting = false;
 

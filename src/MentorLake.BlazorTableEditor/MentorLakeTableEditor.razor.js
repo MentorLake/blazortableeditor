@@ -80,34 +80,59 @@ export function createInstance() {
 					return;
 				}
 
-				const dropdown = e.target.closest && e.target.closest("select.bte-cell-select");
-				if (dropdown) {
-					const cell = dropdown.closest(".bte-cell");
-					if (cell && self._viewport.contains(cell)) {
-						const row = parseInt(cell.getAttribute("data-row"), 10);
-						const col = parseInt(cell.getAttribute("data-col"), 10);
-						if (Number.isFinite(row) && Number.isFinite(col) && self._dotNetRef) {
-							self._dotNetRef.invokeMethodAsync("OnDropdownCellActivate", row, col, !!e.shiftKey).catch(() => {});
-						}
-					}
-					return;
-				}
-
 				const cell = e.target.closest && e.target.closest(".bte-cell");
 				if (cell && self._viewport.contains(cell)) {
 					const row = parseInt(cell.getAttribute("data-row"), 10);
 					const col = parseInt(cell.getAttribute("data-col"), 10);
 					if (!Number.isFinite(row) || !Number.isFinite(col)) return;
-					e.preventDefault();
-					e.stopPropagation();
+					if (cell.hasAttribute("data-vv-trigger")) {
+						self._prepareValidValuePopoverClick(row, col);
+					} else {
+						self._vvSkipClickOpen = false;
+					}
 					self._beginSelectionDrag(row, col, !!e.shiftKey);
 				}
 			};
 
+			const onClick = function (e) {
+				if (e.button != null && e.button !== 0) return;
+				if (e.shiftKey) return;
+				if (self._selDragMoved) return;
+
+				const cell = e.target.closest && e.target.closest(".bte-cell[data-vv-trigger]");
+				if (!cell) return;
+
+				if (self._vvSkipClickOpen) {
+					self._vvSkipClickOpen = false;
+					return;
+				}
+
+				const row = parseInt(cell.getAttribute("data-row"), 10);
+				const col = parseInt(cell.getAttribute("data-col"), 10);
+				if (!Number.isFinite(row) || !Number.isFinite(col)) return;
+
+				// Defer so light-dismiss and Blazor cell re-render settle first.
+				const openRow = row;
+				const openCol = col;
+				setTimeout(function () {
+					if (self._selDragMoved) return;
+					if (self._vvSkipClickOpen) {
+						self._vvSkipClickOpen = false;
+						return;
+					}
+					self._openValidValuePopover(openRow, openCol);
+				}, 0);
+			};
+
 			viewport.addEventListener("scroll", onScroll, {passive: true});
 			viewport.addEventListener("mousedown", onPointerDown, true);
+			viewport.addEventListener("click", onClick);
 			this._onScroll = onScroll;
 			this._onPointerDown = onPointerDown;
+			this._onClick = onClick;
+			this._vvCurrentRow = null;
+			this._vvCurrentCol = null;
+			this._bindValidValuePopover();
 
 			if (typeof ResizeObserver !== "undefined") {
 				const ro = new ResizeObserver(function () {
@@ -134,6 +159,12 @@ export function createInstance() {
 			if (this._viewport && this._onPointerDown) {
 				this._viewport.removeEventListener("mousedown", this._onPointerDown, true);
 			}
+			if (this._viewport && this._onClick) {
+				this._viewport.removeEventListener("click", this._onClick);
+			}
+			if (this._vvPopover && this._onVvToggle) {
+				this._vvPopover.removeEventListener("toggle", this._onVvToggle);
+			}
 			if (this._ro) {
 				this._ro.disconnect();
 				this._ro = null;
@@ -149,7 +180,113 @@ export function createInstance() {
 			this._dotNetRef = null;
 			this._onScroll = null;
 			this._onPointerDown = null;
+			this._onClick = null;
+			this._onVvToggle = null;
+			this._vvPopover = null;
+			this._vvCurrentRow = null;
+			this._vvCurrentCol = null;
+			this._vvSkipClickOpen = false;
 			this._pendingNotify = false;
+		},
+
+		_bindValidValuePopover: function () {
+			if (this._vvPopover && this._onVvToggle) {
+				this._vvPopover.removeEventListener("toggle", this._onVvToggle);
+			}
+
+			const root = this._getRoot();
+			const popover = root ? root.querySelector(".bte-vv-dropdown") : null;
+			this._vvPopover = popover || null;
+			if (!popover) {
+				this._onVvToggle = null;
+				return;
+			}
+
+			const self = this;
+			const onToggle = function (e) {
+				if (e.newState === "closed") {
+					self._vvCurrentRow = null;
+					self._vvCurrentCol = null;
+				}
+			};
+			popover.addEventListener("toggle", onToggle);
+			this._onVvToggle = onToggle;
+		},
+
+		_prepareValidValuePopoverClick: function (row, col) {
+			if (!this._vvPopover || !this._vvPopover.isConnected) {
+				this._bindValidValuePopover();
+			}
+
+			const popover = this._vvPopover;
+			const isOpen = !!(popover && popover.matches && popover.matches(":popover-open"));
+			const same =
+				isOpen &&
+				this._vvCurrentRow === row &&
+				this._vvCurrentCol === col;
+
+			if (!same) {
+				this._vvSkipClickOpen = false;
+				return;
+			}
+
+			this._vvSkipClickOpen = true;
+			try {
+				popover.hidePopover();
+			} catch (_) {
+			}
+			this._vvCurrentRow = null;
+			this._vvCurrentCol = null;
+		},
+
+		_findValidValueTrigger: function (row, col) {
+			const track = this._getCellTrack();
+			if (!track) {
+				return null;
+			}
+			return track.querySelector(
+				`.bte-cell[data-vv-trigger][data-row="${row}"][data-col="${col}"]`
+			);
+		},
+
+		_openValidValuePopover: function (row, col) {
+			if (!this._vvPopover || !this._vvPopover.isConnected) {
+				this._bindValidValuePopover();
+			}
+
+			const popover = this._vvPopover;
+			if (!popover || typeof popover.showPopover !== "function") {
+				return;
+			}
+
+			const cell = this._findValidValueTrigger(row, col);
+			if (!cell) {
+				return;
+			}
+
+			const anchorName = `--bte-vv-r${row}c${col}`;
+			const isOpen = !!(popover.matches && popover.matches(":popover-open"));
+
+			popover.style.positionAnchor = anchorName;
+			try {
+				popover.showPopover({source: cell});
+			} catch (_) {
+				try {
+					if (isOpen) {
+						popover.hidePopover();
+					}
+					popover.showPopover({source: cell});
+				} catch (__) {
+					try {
+						popover.showPopover();
+					} catch (___) {
+						return;
+					}
+				}
+			}
+
+			this._vvCurrentRow = row;
+			this._vvCurrentCol = col;
 		},
 
 		startColumnResize: function (dotNetRef, columnIndex, startClientX, startWidth) {
@@ -625,6 +762,7 @@ export function createInstance() {
 			this._stopResize();
 
 			this._selecting = true;
+			this._selDragMoved = false;
 			const root = this._getRoot();
 			if (shiftKey && root) {
 				const ar = parseInt(root.getAttribute("data-anchor-row"), 10);
@@ -640,11 +778,15 @@ export function createInstance() {
 			this._applySelectionVisual();
 
 			if (this._dotNetRef) {
-				this._dotNetRef.invokeMethodAsync("OnSelectionDragBegin", row, col, !!shiftKey).catch(() => {});
+				this._dotNetRef.invokeMethodAsync(
+					"OnSelectionDragBegin",
+					row,
+					col,
+					!!shiftKey
+				).catch(() => {});
 			}
 
 			const onMove = (e) => {
-				e.preventDefault();
 				this._selClientX = e.clientX;
 				this._selClientY = e.clientY;
 				if (!this._selRaf) {
@@ -653,6 +795,7 @@ export function createInstance() {
 						const hit = this._cellAtPoint(this._selClientX, this._selClientY);
 						if (!hit) return;
 						if (hit.row === this._selEndRow && hit.col === this._selEndCol) return;
+						this._selDragMoved = true;
 						this._selEndRow = hit.row;
 						this._selEndCol = hit.col;
 						this._applySelectionVisual();
@@ -660,21 +803,14 @@ export function createInstance() {
 				}
 			};
 
-			const onUp = (e) => {
-				e.preventDefault();
-				const hit = this._cellAtPoint(e.clientX, e.clientY);
-				if (hit) {
-					this._selEndRow = hit.row;
-					this._selEndCol = hit.col;
-					this._applySelectionVisual();
-				}
+			const onUp = () => {
 				this._stopSelectionDrag(true);
 			};
 
 			this._selMove = onMove;
 			this._selUp = onUp;
-			document.addEventListener("mousemove", onMove, {passive: false});
-			document.addEventListener("mouseup", onUp, {passive: false});
+			document.addEventListener("mousemove", onMove, {passive: true});
+			document.addEventListener("mouseup", onUp, {passive: true});
 		},
 
 		_stopSelectionDrag: function (commit) {
@@ -861,4 +997,49 @@ export function createInstance() {
 			viewport.scrollTop = top || 0;
 		}
 	};
+}
+
+export function showPopover(el, source) {
+	if (!el || typeof el.showPopover !== "function") {
+		return false;
+	}
+	try {
+		if (source) {
+			el.showPopover({source: source});
+		} else if (!(el.matches && el.matches(":popover-open"))) {
+			el.showPopover();
+		}
+		return !!(el && el.matches && el.matches(":popover-open"));
+	} catch (_) {
+		try {
+			if (el.matches && el.matches(":popover-open")) {
+				el.hidePopover();
+			}
+			if (source) {
+				el.showPopover({source: source});
+			} else {
+				el.showPopover();
+			}
+			return !!(el && el.matches && el.matches(":popover-open"));
+		} catch (__) {
+			return false;
+		}
+	}
+}
+
+export function hidePopover(el) {
+	if (!el || typeof el.hidePopover !== "function") {
+		return;
+	}
+	if (el.matches && !el.matches(":popover-open")) {
+		return;
+	}
+	try {
+		el.hidePopover();
+	} catch (_) {
+	}
+}
+
+export function isPopoverOpen(el) {
+	return !!(el && el.matches && el.matches(":popover-open"));
 }

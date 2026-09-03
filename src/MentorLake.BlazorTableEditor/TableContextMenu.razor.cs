@@ -1,9 +1,13 @@
+using System.Globalization;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace MentorLake.BlazorTableEditor;
 
-public partial class TableContextMenu
+public partial class TableContextMenu : IAsyncDisposable
 {
+	[Inject] private IJSRuntime Js { get; set; }
+
 	[Parameter] public SheetContext Sheet { get; set; }
 	[Parameter] public EventCallback OnStructureChanged { get; set; }
 	[Parameter] public EventCallback<int> OnRenameColumn { get; set; }
@@ -11,13 +15,22 @@ public partial class TableContextMenu
 	[Parameter] public EventCallback OnCopy { get; set; }
 	[Parameter] public EventCallback OnPaste { get; set; }
 
+	private ElementReference _popoverRef;
+	private IJSObjectReference _module;
 	private double _x;
 	private double _y;
 	private int _row;
 	private int _col;
 	private bool _allowRename;
+	private bool _domOpen;
+	private bool _shouldShow;
+	private bool _shouldHide;
+	private bool _disposed;
 
 	public bool IsOpen { get; private set; }
+
+	private string AnchorStyle =>
+		$"left:{_x.ToString(CultureInfo.InvariantCulture)}px;top:{_y.ToString(CultureInfo.InvariantCulture)}px;";
 
 	private void GetDeleteRowRange(out int startRow, out int endRow)
 	{
@@ -106,18 +119,140 @@ public partial class TableContextMenu
 		_col = col;
 		_allowRename = allowRename;
 		IsOpen = true;
+		_shouldHide = false;
+		_shouldShow = true;
 		StateHasChanged();
 	}
 
 	public void Close()
 	{
-		if (!IsOpen)
+		if (!IsOpen && !_domOpen)
 		{
 			return;
 		}
 
 		IsOpen = false;
 		_allowRename = false;
+		_shouldShow = false;
+		_shouldHide = true;
+		StateHasChanged();
+	}
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		if (!_shouldShow && !_shouldHide)
+		{
+			return;
+		}
+
+		var show = _shouldShow;
+		var hide = _shouldHide;
+		_shouldShow = false;
+		_shouldHide = false;
+
+		await EnsureModuleAsync();
+		if (_disposed || _module is null)
+		{
+			return;
+		}
+
+		if (hide || (show && _domOpen))
+		{
+			await HideDomAsync();
+			_domOpen = false;
+		}
+
+		if (!show || !IsOpen)
+		{
+			return;
+		}
+
+		var opened = await _module.InvokeAsync<bool>("showPopover", _popoverRef);
+		if (_disposed)
+		{
+			return;
+		}
+
+		if (!IsOpen)
+		{
+			if (opened)
+			{
+				await HideDomAsync();
+			}
+
+			_domOpen = false;
+			return;
+		}
+
+		_domOpen = opened;
+		if (!opened)
+		{
+			IsOpen = false;
+			_allowRename = false;
+		}
+	}
+
+	private async Task HideDomAsync()
+	{
+		try
+		{
+			await _module.InvokeVoidAsync("hidePopover", _popoverRef);
+		}
+		catch
+		{
+		}
+	}
+
+	private async Task EnsureModuleAsync()
+	{
+		if (_module is not null)
+		{
+			return;
+		}
+
+		try
+		{
+			_module = await Js.InvokeAsync<IJSObjectReference>(
+				"import",
+				$"./_content/MentorLake.BlazorTableEditor/{nameof(MentorLakeTableEditor)}.razor.js");
+		}
+		catch
+		{
+			_module = null;
+		}
+	}
+
+	private async Task OnToggle(EventArgs e)
+	{
+		var open = false;
+		if (_module is not null)
+		{
+			try
+			{
+				open = await _module.InvokeAsync<bool>("isPopoverOpen", _popoverRef);
+			}
+			catch
+			{
+			}
+		}
+
+		_domOpen = open;
+		if (open == IsOpen)
+		{
+			return;
+		}
+
+		IsOpen = open;
+		if (!open)
+		{
+			_allowRename = false;
+		}
+
 		StateHasChanged();
 	}
 
@@ -220,5 +355,33 @@ public partial class TableContextMenu
 	{
 		Close();
 		await OnPaste.InvokeAsync();
+	}
+
+	public async ValueTask DisposeAsync()
+	{
+		if (_disposed)
+		{
+			return;
+		}
+
+		_disposed = true;
+		if (_module is not null)
+		{
+			try
+			{
+				if (_domOpen)
+				{
+					await HideDomAsync();
+					_domOpen = false;
+				}
+
+				await _module.DisposeAsync();
+			}
+			catch (JSDisconnectedException)
+			{
+			}
+
+			_module = null;
+		}
 	}
 }

@@ -1,0 +1,47 @@
+@using MentorLake.BlazorTableEditor.Models
+
+<div id="@PopoverId"
+     @ref="_popoverRef"
+     popover
+     class="bte-vv-dropdown"
+     style="@DropdownStyle"
+     @onmousedown:stopPropagation="true"
+     @onclick:stopPropagation="true"
+     @onkeydown:stopPropagation="true">
+	@{
+		var current = _currentValue ?? string.Empty;
+		var currentInList = _options.Count > 0 && ContainsValue(_options, current);
+	}
+
+	@if (_options.Count > 0)
+	{
+		<button type="button"
+		        class="bte-vv-option @(current.Length == 0 ? "is-selected" : null)"
+		        popovertarget="@PopoverId"
+		        @onclick="() => SelectAsync(string.Empty)">
+			<span class="bte-vv-option-label bte-vv-option-blank">&nbsp;</span>
+		</button>
+
+		@if (current.Length > 0 && !currentInList)
+		{
+			<button type="button"
+			        class="bte-vv-option is-selected is-invalid"
+			        popovertarget="@PopoverId"
+			        @onclick="() => SelectAsync(current)">
+				<span class="bte-vv-option-label" title="@current">@current</span>
+			</button>
+		}
+
+		@foreach (var option in _options)
+		{
+			var value = option.Value;
+			var selected = string.Equals(value, current, StringComparison.Ordinal);
+			<button type="button"
+			        class="bte-vv-option @(selected ? "is-selected" : null)"
+			        popovertarget="@PopoverId"
+			        @onclick="() => SelectAsync(value)">
+				<span class="bte-vv-option-label" title="@option.Display">@option.Display</span>
+			</button>
+		}
+	}
+</div>

@@ -17,7 +17,6 @@ public partial class TableCellGrid
 	[Parameter] public EventCallback<(int Row, int Col)> OnCellMouseEnter { get; set; }
 	[Parameter] public EventCallback<(int Row, int Col)> OnDoubleClick { get; set; }
 	[Parameter] public EventCallback<(int Row, int Col, MouseEventArgs Mouse)> OnContextMenu { get; set; }
-	[Parameter] public EventCallback<(int Row, int Col, string Value)> OnDropdownChanged { get; set; }
 	[Parameter] public RenderFragment ChildContent { get; set; }
 
 	private bool IsInClipboardSource(int row, int col) =>
@@ -70,19 +69,6 @@ public partial class TableCellGrid
 		return $"left:{left}px;top:{top}px;width:{right - left}px;height:{bottom - top}px;";
 	}
 
-	private static bool ContainsValue(IReadOnlyList<ValidValueOption> values, string text)
-	{
-		for (var i = 0; i < values.Count; i++)
-		{
-			if (string.Equals(values[i].Value, text, StringComparison.Ordinal))
-			{
-				return true;
-			}
-		}
-
-		return false;
-	}
-
 	private Task OnCellMouseDownAsync(int row, int col, MouseEventArgs e) =>
 		OnCellMouseDown.InvokeAsync((row, col, e));
 
@@ -94,10 +80,4 @@ public partial class TableCellGrid
 
 	private Task OnContextMenuAsync(int row, int col, MouseEventArgs e) =>
 		OnContextMenu.InvokeAsync((row, col, e));
-
-	private Task OnSelectChangedAsync(int row, int col, ChangeEventArgs e)
-	{
-		var value = e.Value?.ToString() ?? string.Empty;
-		return OnDropdownChanged.InvokeAsync((row, col, value));
-	}
 }

@@ -5,9 +5,17 @@
 	background: transparent;
 }
 
-.bte-context-menu {
+.bte-context-anchor {
 	position: fixed;
-	z-index: 1001;
+	width: 0;
+	height: 0;
+	pointer-events: none;
+	anchor-name: --bte-context-anchor;
+}
+
+.bte-context-menu {
+	box-sizing: border-box;
+	margin: 0;
 	min-width: 200px;
 	padding: 4px 0;
 	background: #fff;
@@ -17,6 +25,18 @@
 	font-size: 13px;
 	color: #202124;
 	user-select: none;
+	position: fixed;
+	position-anchor: --bte-context-anchor;
+	inset: auto;
+	top: anchor(top);
+	left: anchor(left);
+	right: auto;
+	bottom: auto;
+	position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+}
+
+.bte-context-menu:popover-open {
+	display: block;
 }
 
 .bte-context-item {

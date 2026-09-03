@@ -73,8 +73,7 @@
 					               OnCellMouseDown="OnCellMouseDownFromChild"
 					               OnCellMouseEnter="OnCellMouseEnterFromChild"
 					               OnDoubleClick="OnCellDoubleClickFromChild"
-					               OnContextMenu="OnCellContextMenuFromChild"
-					               OnDropdownChanged="OnDropdownChangedFromChild">
+					               OnContextMenu="OnCellContextMenuFromChild">
 						<TableSelectionOverlay Sheet="Context"
 						                       OnFillHandleMouseDown="OnFillHandleMouseDown" />
 
@@ -89,6 +88,11 @@
 			</div>
 		</div>
 	</div>
+
+	<TableValidValueDropdown @ref="_vvDropdown"
+	                         PopoverId="@_vvPopoverId"
+	                         MaxVisibleItems="8"
+	                         OnSelected="OnValidValueSelected" />
 
 	<TableContextMenu @ref="_contextMenu"
 	                  Sheet="Context"
