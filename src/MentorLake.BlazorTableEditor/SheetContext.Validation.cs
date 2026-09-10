@@ -101,24 +101,28 @@ public partial class SheetContext
 		_validationErrors.Clear();
 		ApplyColumnValidValueErrors();
 
-		if (_validator is null)
+		if (_validator is not null)
 		{
-			return;
-		}
-
-		var errors = _validator.Validate(Model);
-		if (errors is null)
-		{
-			return;
-		}
-
-		foreach (var kvp in errors)
-		{
-			if (kvp.Key.IsValid && !string.IsNullOrEmpty(kvp.Value))
+			var errors = _validator.Validate(Model);
+			if (errors is not null)
 			{
-				_validationErrors[kvp.Key] = kvp.Value;
+				foreach (var kvp in errors)
+				{
+					if (kvp.Key.IsValid && !string.IsNullOrEmpty(kvp.Value))
+					{
+						_validationErrors[kvp.Key] = kvp.Value;
+					}
+				}
 			}
 		}
+
+		NotifyValidationChanged();
+	}
+
+	private void NotifyValidationChanged()
+	{
+		var snapshot = new Dictionary<CellPosition, string>(_validationErrors);
+		ValidationChanged?.Invoke(snapshot);
 	}
 
 	private void ApplyColumnValidValueErrors()

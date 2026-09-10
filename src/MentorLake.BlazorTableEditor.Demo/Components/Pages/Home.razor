@@ -15,6 +15,7 @@
 		Columns with supplied valid values (Category, Status) show a dropdown in each cell; invalid values are marked with an error.
 		Category options use a display label with a short stored code (e.g. Fruit → FR).
 		Use <strong>Export CSV</strong> / <strong>Import CSV</strong> in the toolbar to save or load spreadsheet data.
+		<code>ValidationChanged</code> updates the validation panel below whenever validation runs.
 	</p>
 
 	<button type="button" @onclick="OnShowHideEditor">Show/hide editor</button>
@@ -27,9 +28,36 @@
 				Validator="_validator"
 				ColumnValidValues="_columnValidValues"
 				Model="_model"
-				ModelChanged="OnModelChanged"/>
+				ModelChanged="OnModelChanged"
+				ValidationChanged="OnValidationChanged"/>
 		</div>
 	}
+
+	<section class="bte-validation-panel" aria-live="polite">
+		<h2 class="bte-validation-title">ValidationChanged</h2>
+		<p class="bte-validation-summary">
+			@_validationErrors.Count error@(_validationErrors.Count == 1 ? "" : "s")
+			@if (_validationCallbackCount > 0)
+			{
+				<span> · callback fired @_validationCallbackCount time@(_validationCallbackCount == 1 ? "" : "s")</span>
+			}
+		</p>
+		@if (_validationErrors.Count == 0)
+		{
+			<p class="bte-validation-empty">No validation errors.</p>
+		}
+		else
+		{
+			<ul class="bte-validation-list">
+				@foreach (var error in _validationErrors.OrderBy(e => e.Key.Row).ThenBy(e => e.Key.Col))
+				{
+					<li>
+						<strong>R@(error.Key.Row + 1)C@(error.Key.Col + 1)</strong>: @error.Value
+					</li>
+				}
+			</ul>
+		}
+	</section>
 
 	<label class="bte-csv-label" for="csv-export">CSV export</label>
 	<textarea id="csv-export" class="bte-csv-export" readonly rows="16">@_csvText</textarea>
@@ -40,6 +68,9 @@
 	private string _csvText = string.Empty;
 	private TableDataModel _model = new(100, 5);
 	private readonly ITableValidator _validator = new DemoTableValidator();
+	private IReadOnlyDictionary<CellPosition, string> _validationErrors =
+		new Dictionary<CellPosition, string>();
+	private int _validationCallbackCount;
 
 	private readonly IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> _columnValidValues =
 		new Dictionary<string, IReadOnlyList<ValidValueOption>>(StringComparer.OrdinalIgnoreCase)
@@ -62,6 +93,12 @@
 	private void OnModelChanged(TableDataModel model)
 	{
 		_model = model;
+	}
+
+	private void OnValidationChanged(IReadOnlyDictionary<CellPosition, string> errors)
+	{
+		_validationErrors = errors ?? new Dictionary<CellPosition, string>();
+		_validationCallbackCount++;
 	}
 
 	private void OnExportCsv()

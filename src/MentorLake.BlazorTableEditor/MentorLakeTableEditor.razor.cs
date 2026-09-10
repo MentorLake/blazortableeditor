@@ -10,6 +10,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	[Parameter] public EventCallback<TableDataModel> ModelChanged { get; set; }
 	[Parameter] public ITableValidator Validator { get; set; }
 	[Parameter] public IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> ColumnValidValues { get; set; }
+	[Parameter] public EventCallback<IReadOnlyDictionary<CellPosition, string>> ValidationChanged { get; set; }
 	[Parameter] public bool ShowToolbar { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;
@@ -38,9 +39,9 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	protected override void OnInitialized()
 	{
 		Context = new SheetContext(Model, addSampleIfEmpty: true);
+		WireContext(Context);
 		Context.SetValidator(Validator);
 		Context.SetColumnValidValues(ColumnValidValues);
-		WireContext(Context);
 		ApplyViewportLayout();
 	}
 
@@ -54,9 +55,9 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		{
 			UnwireContext(Context);
 			Context = new SheetContext(Model, addSampleIfEmpty: false);
+			WireContext(Context);
 			Context.SetValidator(Validator);
 			Context.SetColumnValidValues(ColumnValidValues);
-			WireContext(Context);
 			ApplyViewportLayout();
 		}
 		else
@@ -76,12 +77,14 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	{
 		ctx.StateChanged += OnContextChanged;
 		ctx.DataChanged += OnDataChanged;
+		ctx.ValidationChanged += OnValidationChanged;
 	}
 
 	private void UnwireContext(SheetContext ctx)
 	{
 		ctx.StateChanged -= OnContextChanged;
 		ctx.DataChanged -= OnDataChanged;
+		ctx.ValidationChanged -= OnValidationChanged;
 	}
 
 	private void OnContextChanged() => _ = InvokeAsync(StateHasChanged);
@@ -94,6 +97,14 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		}
 
 		StateHasChanged();
+	});
+
+	private void OnValidationChanged(IReadOnlyDictionary<CellPosition, string> errors) => _ = InvokeAsync(async () =>
+	{
+		if (ValidationChanged.HasDelegate)
+		{
+			await ValidationChanged.InvokeAsync(errors);
+		}
 	});
 	public async ValueTask DisposeAsync()
 	{

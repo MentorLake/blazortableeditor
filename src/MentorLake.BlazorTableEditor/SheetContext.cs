@@ -20,6 +20,7 @@ public partial class SheetContext
 
 	public event Action StateChanged;
 	public event Action DataChanged;
+	public event Action<IReadOnlyDictionary<CellPosition, string>> ValidationChanged;
 
 	public SheetContext(TableDataModel model = null, bool addSampleIfEmpty = true)
 	{
