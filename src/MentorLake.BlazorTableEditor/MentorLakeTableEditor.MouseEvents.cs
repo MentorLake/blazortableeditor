@@ -156,7 +156,7 @@ public partial class MentorLakeTableEditor
 
 	private void OnFillHandleMouseDown(MouseEventArgs e)
 	{
-		if (_jsReady || e.Button != 0)
+		if (ReadOnly || _jsReady || e.Button != 0)
 		{
 			return;
 		}

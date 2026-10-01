@@ -20,19 +20,31 @@ public partial class MentorLakeTableEditor
 					_ = CopyAsync();
 					return;
 				case "x":
-					_ = CutAsync();
+					if (!ReadOnly)
+					{
+						_ = CutAsync();
+					}
 					return;
 				case "v":
-					_ = PasteAsync();
+					if (!ReadOnly)
+					{
+						_ = PasteAsync();
+					}
 					return;
 				case "z":
-					if (e.ShiftKey)
-						Redo();
-					else
-						Undo();
+					if (!ReadOnly)
+					{
+						if (e.ShiftKey)
+							Redo();
+						else
+							Undo();
+					}
 					return;
 				case "y":
-					Redo();
+					if (!ReadOnly)
+					{
+						Redo();
+					}
 					return;
 			}
 		}
@@ -60,7 +72,10 @@ public partial class MentorLakeTableEditor
 			case "Enter":
 			case "F2":
 			case " ":
-				BeginEdit(Context.ActiveCell.Row, Context.ActiveCell.Col);
+				if (!ReadOnly)
+				{
+					BeginEdit(Context.ActiveCell.Row, Context.ActiveCell.Col);
+				}
 				break;
 			case "Escape":
 				if (IsFilterPopupOpen)
@@ -83,12 +98,20 @@ public partial class MentorLakeTableEditor
 				break;
 			case "Delete":
 			case "Backspace":
-				Context.ClearSelectionValues();
+				if (!ReadOnly)
+				{
+					Context.ClearSelectionValues();
+				}
 				break;
 			case "Tab":
 				Context.SetActiveCell(Context.ActiveCell.Row, Context.ActiveCell.Col + (e.ShiftKey ? -1 : 1));
 				break;
 			default:
+				if (ReadOnly)
+				{
+					break;
+				}
+
 				if (e.Key.Length == 1 && !e.CtrlKey && !e.AltKey && !e.MetaKey)
 				{
 					if (Context.HasValidValuesForColumn(Context.ActiveCell.Col))

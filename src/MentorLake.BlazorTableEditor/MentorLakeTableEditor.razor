@@ -1,6 +1,6 @@
 @using MentorLake.BlazorTableEditor.Models
 
-<div class="bte-root @(_isResizingCol ? "is-col-resizing" : null) @(_isResizingRow ? "is-row-resizing" : null)"
+<div class="bte-root @(ReadOnly ? "is-readonly" : null) @(_isResizingCol ? "is-col-resizing" : null) @(_isResizingRow ? "is-row-resizing" : null)"
      tabindex="0"
      @ref="_rootRef"
      data-anchor-row="@Context.SelectionAnchor.Row"
@@ -20,6 +20,7 @@
 	@if (ShowToolbar)
 	{
 		<TableToolbar Sheet="Context"
+		              ReadOnly="ReadOnly"
 		              CsvStatus="_csvStatus"
 		              OnUndo="UndoAsync"
 		              OnRedo="RedoAsync"
@@ -64,6 +65,7 @@
 					                 OnContextMenu="OnRowHeaderContextMenu" />
 
 					<TableCellGrid Sheet="Context"
+					               ReadOnly="ReadOnly"
 					               FirstRow="_firstRow"
 					               LastRow="_lastRow"
 					               FirstCol="_firstCol"
@@ -76,6 +78,7 @@
 					               OnContextMenu="OnCellContextMenuFromChild"
 					               OnDropdownChanged="OnDropdownChangedFromChild">
 						<TableSelectionOverlay Sheet="Context"
+						                       ReadOnly="ReadOnly"
 						                       OnFillHandleMouseDown="OnFillHandleMouseDown" />
 
 						<TableCellEditor Sheet="Context"
@@ -92,6 +95,7 @@
 
 	<TableContextMenu @ref="_contextMenu"
 	                  Sheet="Context"
+	                  ReadOnly="ReadOnly"
 	                  OnStructureChanged="OnContextMenuStructureChanged"
 	                  OnRenameColumn="OnContextMenuRenameColumn"
 	                  OnCut="CutAsync"

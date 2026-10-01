@@ -12,6 +12,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 	[Parameter] public IReadOnlyDictionary<string, IReadOnlyList<ValidValueOption>> ColumnValidValues { get; set; }
 	[Parameter] public EventCallback<IReadOnlyDictionary<CellPosition, string>> ValidationChanged { get; set; }
 	[Parameter] public bool ShowToolbar { get; set; }
+	[Parameter] public bool ReadOnly { get; set; }
 	[Parameter] public int ViewportOverscan { get; set; } = 4;
 	private SheetContext Context { get; set; } = null!;
 	private ElementReference _rootRef;
@@ -59,6 +60,10 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 			Context.SetValidator(Validator);
 			Context.SetColumnValidValues(ColumnValidValues);
 			ApplyViewportLayout();
+		}
+		else if (ReadOnly && _isEditing)
+		{
+			ClearEditState();
 		}
 		else
 		{

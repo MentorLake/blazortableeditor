@@ -26,6 +26,17 @@
 	cursor: default;
 }
 
+.bte-readonly-badge {
+	display: inline-block;
+	margin-right: 4px;
+	padding: 1px 6px;
+	border-radius: 3px;
+	background: #ece7dc;
+	color: #6b5420;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
 .bte-status {
 	margin-left: auto;
 	color: #555;

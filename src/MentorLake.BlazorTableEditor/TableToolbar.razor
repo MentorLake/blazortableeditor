@@ -2,20 +2,25 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <div class="bte-toolbar">
-	<button type="button" @onclick="UndoAsync" disabled="@(!Sheet.CanUndo)">Undo</button>
-	<button type="button" @onclick="RedoAsync" disabled="@(!Sheet.CanRedo)">Redo</button>
-	<button type="button" @onclick="CutAsync">Cut</button>
+	<button type="button" @onclick="UndoAsync" disabled="@(ReadOnly || !Sheet.CanUndo)">Undo</button>
+	<button type="button" @onclick="RedoAsync" disabled="@(ReadOnly || !Sheet.CanRedo)">Redo</button>
+	<button type="button" @onclick="CutAsync" disabled="@ReadOnly">Cut</button>
 	<button type="button" @onclick="CopyAsync">Copy</button>
-	<button type="button" @onclick="PasteAsync">Paste</button>
-	<button type="button" @onclick="InsertRowAtActive">Insert Row</button>
-	<button type="button" @onclick="DeleteRowAtActive">Delete Row</button>
-	<button type="button" @onclick="InsertColAtActive">Insert Col</button>
-	<button type="button" @onclick="DeleteColAtActive">Delete Col</button>
+	<button type="button" @onclick="PasteAsync" disabled="@ReadOnly">Paste</button>
+	<button type="button" @onclick="InsertRowAtActive" disabled="@ReadOnly">Insert Row</button>
+	<button type="button" @onclick="DeleteRowAtActive" disabled="@ReadOnly">Delete Row</button>
+	<button type="button" @onclick="InsertColAtActive" disabled="@ReadOnly">Insert Col</button>
+	<button type="button" @onclick="DeleteColAtActive" disabled="@ReadOnly">Delete Col</button>
 	<button type="button" @onclick="ExportCsvAsync">Export CSV</button>
-	<button type="button" class="bte-file-btn" @onclick="ImportCsvAsync">Import CSV</button>
+	<button type="button" class="bte-file-btn" @onclick="ImportCsvAsync" disabled="@ReadOnly">Import CSV</button>
 	<InputFile id="bte-csv-input" class="bte-file-input" OnChange="OnCsvFileSelectedAsync"
 	           accept=".csv,text/csv"/>
 	<span class="bte-status">
+		@if (ReadOnly)
+		{
+			<span class="bte-readonly-badge">Read-only</span>
+			<text> | </text>
+		}
 		@Sheet.Model.RowCount × @Sheet.Model.ColumnCount
 		| Active (@(Sheet.ActiveCell.Row + 1), @GetActiveColName())
 		@if (Sheet.CurrentSelection is { } sel && (sel.Width > 1 || sel.Height > 1))

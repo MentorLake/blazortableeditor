@@ -47,6 +47,7 @@
 				@if (hasSelect)
 				{
 					<select class="bte-cell-select"
+					        disabled="@ReadOnly"
 					        value="@rawValue"
 					        title="@title"
 					        @onchange="e => OnSelectChangedAsync(row, col, e)"

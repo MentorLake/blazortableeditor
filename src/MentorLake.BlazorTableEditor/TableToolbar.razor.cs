@@ -6,6 +6,7 @@ namespace MentorLake.BlazorTableEditor;
 public partial class TableToolbar
 {
 	[Parameter] public SheetContext Sheet { get; set; }
+	[Parameter] public bool ReadOnly { get; set; }
 	[Parameter] public string CsvStatus { get; set; }
 	[Parameter] public EventCallback OnUndo { get; set; }
 	[Parameter] public EventCallback OnRedo { get; set; }
@@ -28,24 +29,44 @@ public partial class TableToolbar
 
 	private async Task InsertRowAtActive()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		Sheet.InsertRow(Sheet.ActiveCell.Row);
 		await OnStructureChanged.InvokeAsync();
 	}
 
 	private async Task DeleteRowAtActive()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		Sheet.DeleteRow(Sheet.ActiveCell.Row);
 		await OnStructureChanged.InvokeAsync();
 	}
 
 	private async Task InsertColAtActive()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		Sheet.InsertColumn(Sheet.ActiveCell.Col);
 		await OnStructureChanged.InvokeAsync();
 	}
 
 	private async Task DeleteColAtActive()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		Sheet.DeleteColumn(Sheet.ActiveCell.Col);
 		await OnStructureChanged.InvokeAsync();
 	}

@@ -7,6 +7,7 @@ namespace MentorLake.BlazorTableEditor;
 public partial class TableSelectionOverlay
 {
 	[Parameter] public SheetContext Sheet { get; set; }
+	[Parameter] public bool ReadOnly { get; set; }
 	[Parameter] public EventCallback<MouseEventArgs> OnFillHandleMouseDown { get; set; }
 
 	private string GetRegionBox(CellRegion region)

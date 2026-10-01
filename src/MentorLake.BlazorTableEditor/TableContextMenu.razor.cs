@@ -9,6 +9,7 @@ public partial class TableContextMenu : IAsyncDisposable
 	[Inject] private IJSRuntime Js { get; set; }
 
 	[Parameter] public SheetContext Sheet { get; set; }
+	[Parameter] public bool ReadOnly { get; set; }
 	[Parameter] public EventCallback OnStructureChanged { get; set; }
 	[Parameter] public EventCallback<int> OnRenameColumn { get; set; }
 	[Parameter] public EventCallback OnCut { get; set; }
@@ -258,7 +259,7 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task RenameHeaderAsync()
 	{
-		if (!_allowRename)
+		if (ReadOnly || !_allowRename)
 		{
 			Close();
 			return;
@@ -271,6 +272,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task Undo()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.Undo();
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -278,6 +285,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task Redo()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.Redo();
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -285,6 +298,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task InsertColLeft()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.InsertColumn(_col);
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -292,6 +311,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task InsertColRight()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.InsertColumn(_col + 1);
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -299,7 +324,7 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task DeleteColumn()
 	{
-		if (!CanDeleteColumn)
+		if (ReadOnly || !CanDeleteColumn)
 		{
 			Close();
 			return;
@@ -313,6 +338,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task InsertRowAbove()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.InsertRow(_row);
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -320,6 +351,12 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task InsertRowBelow()
 	{
+		if (ReadOnly)
+		{
+			Close();
+			return;
+		}
+
 		Sheet.InsertRow(_row + 1);
 		Close();
 		await OnStructureChanged.InvokeAsync();
@@ -327,7 +364,7 @@ public partial class TableContextMenu : IAsyncDisposable
 
 	private async Task DeleteRow()
 	{
-		if (!CanDeleteRow)
+		if (ReadOnly || !CanDeleteRow)
 		{
 			Close();
 			return;
@@ -342,6 +379,10 @@ public partial class TableContextMenu : IAsyncDisposable
 	private async Task CutAsync()
 	{
 		Close();
+		if (ReadOnly)
+		{
+			return;
+		}
 		await OnCut.InvokeAsync();
 	}
 
@@ -354,6 +395,10 @@ public partial class TableContextMenu : IAsyncDisposable
 	private async Task PasteAsync()
 	{
 		Close();
+		if (ReadOnly)
+		{
+			return;
+		}
 		await OnPaste.InvokeAsync();
 	}
 

@@ -39,6 +39,11 @@ public partial class MentorLakeTableEditor
 
 	private async Task CutAsync()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		var region = Context.GetEffectiveSelection();
 		_internalClipboard = Context.CutSelection();
 		SetClipboardVisual(region, ClipboardVisualMode.Cut);
@@ -48,6 +53,11 @@ public partial class MentorLakeTableEditor
 
 	private async Task PasteAsync()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		var text = await ReadClipboardTextAsync();
 		ClipboardGrid grid;
 

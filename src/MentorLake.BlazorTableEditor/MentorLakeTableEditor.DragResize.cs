@@ -29,6 +29,11 @@ public partial class MentorLakeTableEditor
 	[JSInvokable]
 	public Task OnFillDragBegin()
 	{
+		if (ReadOnly)
+		{
+			return Task.CompletedTask;
+		}
+
 		Context.StartDragFill(notify: false);
 		return Task.CompletedTask;
 	}
@@ -36,6 +41,11 @@ public partial class MentorLakeTableEditor
 	[JSInvokable]
 	public Task OnFillDragEnd(int row, int col)
 	{
+		if (ReadOnly)
+		{
+			return Task.CompletedTask;
+		}
+
 		if (!Context.IsDragFilling)
 		{
 			Context.StartDragFill(notify: false);

@@ -26,8 +26,15 @@ public partial class MentorLakeTableEditor
 	private bool IsEditingColumnHeader(int col) =>
 		IsEditingColumnHeaderActive() && _headerEditIndex == col;
 
-	private void OnColHeaderDoubleClick(int col) =>
+	private void OnColHeaderDoubleClick(int col)
+	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		BeginHeaderEdit(HeaderEditKind.Column, col);
+	}
 
 	private void OnColHeaderMouseDownFromChild((int Col, MouseEventArgs Mouse) args) =>
 		OnColHeaderMouseDown(args.Col, args.Mouse);
@@ -47,14 +54,26 @@ public partial class MentorLakeTableEditor
 	private void OnCellMouseEnterFromChild((int Row, int Col) args) =>
 		OnCellMouseEnter(args.Row, args.Col);
 
-	private void OnCellDoubleClickFromChild((int Row, int Col) args) =>
+	private void OnCellDoubleClickFromChild((int Row, int Col) args)
+	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		BeginEdit(args.Row, args.Col);
+	}
 
 	private void OnCellContextMenuFromChild((int Row, int Col, MouseEventArgs Mouse) args) =>
 		OpenContextMenu(args.Mouse, args.Row, args.Col);
 
 	private void OnDropdownChangedFromChild((int Row, int Col, string Value) args)
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		if (_isEditing)
 		{
 			CommitEdit();
@@ -66,6 +85,11 @@ public partial class MentorLakeTableEditor
 
 	private void BeginEdit(int row, int col)
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		if (Context.HasValidValuesForColumn(col))
 		{
 			Context.SetActiveCell(row, col);
@@ -108,6 +132,11 @@ public partial class MentorLakeTableEditor
 
 	private void BeginHeaderEdit(HeaderEditKind kind, int index, bool selectHeader = true)
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		if (kind != HeaderEditKind.Column || index < 0 || index >= Context.Model.ColumnCount)
 		{
 			return;

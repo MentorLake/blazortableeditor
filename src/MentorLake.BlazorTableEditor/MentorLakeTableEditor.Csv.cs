@@ -28,6 +28,11 @@ public partial class MentorLakeTableEditor
 
 	private async Task TriggerCsvImport()
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		try
 		{
 			await _instance.InvokeVoidAsync("clickElement", "bte-csv-input");
@@ -41,6 +46,11 @@ public partial class MentorLakeTableEditor
 
 	private async Task OnCsvFileSelected(InputFileChangeEventArgs e)
 	{
+		if (ReadOnly)
+		{
+			return;
+		}
+
 		var file = e.File;
 		if (file is null)
 		{

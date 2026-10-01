@@ -7,6 +7,7 @@ namespace MentorLake.BlazorTableEditor;
 public partial class TableCellGrid
 {
 	[Parameter] public SheetContext Sheet { get; set; }
+	[Parameter] public bool ReadOnly { get; set; }
 	[Parameter] public int FirstRow { get; set; }
 	[Parameter] public int LastRow { get; set; }
 	[Parameter] public int FirstCol { get; set; }
