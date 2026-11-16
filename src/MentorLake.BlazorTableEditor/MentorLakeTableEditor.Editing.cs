@@ -104,7 +104,7 @@ public partial class MentorLakeTableEditor
 
 		Context.SetActiveCell(row, col);
 		var cell = Context.GetValue(row, col);
-		_editValue = cell?.Value?.ToString() ?? string.Empty;
+		_editValue = cell?.Value ?? string.Empty;
 		_editPos = new CellPosition(row, col);
 		_headerEditKind = HeaderEditKind.None;
 		_headerEditIndex = -1;

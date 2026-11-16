@@ -1,3 +1,4 @@
+using System.Globalization;
 using MentorLake.BlazorTableEditor.Models;
 
 namespace MentorLake.BlazorTableEditor.Demo.Validators;
@@ -17,28 +18,26 @@ public sealed class DemoTableValidator : ITableValidator
 		{
 			for (int c = 0; c < model.ColumnCount; c++)
 			{
-				var cell = model.GetCell(r, c);
-				var value = cell?.Value;
+				var value = model.GetCell(r, c)?.Value;
 
-				if (value is null)
+				if (string.IsNullOrEmpty(value))
 				{
 					continue;
 				}
 
 				if (c == 0)
 				{
-					if (value is string s && string.IsNullOrWhiteSpace(s))
+					if (string.IsNullOrWhiteSpace(value))
 					{
-						Console.WriteLine("Error");
 						errors[new CellPosition(r, c)] = "Name is required.";
 					}
-					else if (value is string s2 && s2.Length > 50)
+					else if (value.Length > 50)
 					{
 						errors[new CellPosition(r, c)] = "Name must be 50 characters or fewer.";
 					}
 				}
 
-				if (c == 1 && value is int i)
+				if (c == 1 && int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
 				{
 					if (i < 0)
 					{
@@ -50,15 +49,12 @@ public sealed class DemoTableValidator : ITableValidator
 					}
 				}
 
-				if (c == 2 && value is double d)
+				if (c == 2 && double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var d) && d < 0)
 				{
-					if (d < 0)
-					{
-						errors[new CellPosition(r, c)] = "Amount must be non-negative.";
-					}
+					errors[new CellPosition(r, c)] = "Amount must be non-negative.";
 				}
 
-				if (value is string text && text.Contains("error", StringComparison.OrdinalIgnoreCase))
+				if (value.Contains("error", StringComparison.OrdinalIgnoreCase))
 				{
 					errors[new CellPosition(r, c)] = "Text cannot contain the word 'error'.";
 				}

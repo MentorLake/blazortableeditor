@@ -117,7 +117,7 @@ public partial class SheetContext
 				var sourceValue = GetValue(sr, sc);
 				if (sourceValue is not null)
 				{
-					Model.SetCell(tr, tc, new CellValue(sourceValue.Value) { Format = sourceValue.Format, BackgroundColor = sourceValue.BackgroundColor, TextColor = sourceValue.TextColor });
+					Model.SetCell(tr, tc, sourceValue.Clone());
 				}
 				else
 				{

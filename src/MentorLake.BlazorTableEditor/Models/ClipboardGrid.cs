@@ -23,7 +23,7 @@ public sealed class ClipboardGrid
 			var parts = new string[Cols];
 			for (var c = 0; c < Cols; c++)
 			{
-				parts[c] = EscapeTsv(Cells[r, c]?.ToString() ?? string.Empty);
+				parts[c] = EscapeTsv(Cells[r, c]?.Value ?? string.Empty);
 			}
 
 			lines[r] = string.Join('\t', parts);

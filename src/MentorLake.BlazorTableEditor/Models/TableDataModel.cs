@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -50,7 +49,7 @@ public class TableDataModel
 	public void SetCell(int row, int col, CellValue value)
 	{
 		var key = GetKey(row, col);
-		if (value == null || (value.Value == null && string.IsNullOrEmpty(value.Format)))
+		if (value == null || string.IsNullOrEmpty(value.Value))
 		{
 			Cells.Remove(key);
 		}
@@ -106,7 +105,7 @@ public class TableDataModel
 			{
 				if (c > 0) sb.Append(',');
 				var cell = GetCell(r, c);
-				sb.Append(EscapeCsvField(cell?.ToString() ?? string.Empty));
+				sb.Append(EscapeCsvField(cell?.Value ?? string.Empty));
 			}
 
 			if (r < rows - 1)
@@ -167,7 +166,7 @@ public class TableDataModel
 					continue;
 				}
 
-				model.SetCell(r, c, new CellValue(ParseCellObject(text)));
+				model.SetCell(r, c, new CellValue(text));
 			}
 		}
 
@@ -205,21 +204,6 @@ public class TableDataModel
 		}
 
 		return (maxRow, maxCol);
-	}
-
-	private static object ParseCellObject(string text)
-	{
-		if (int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var i))
-		{
-			return i;
-		}
-
-		if (double.TryParse(text, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out var d))
-		{
-			return d;
-		}
-
-		return text;
 	}
 
 	private static string EscapeCsvField(string value)
@@ -321,23 +305,15 @@ public class TableDataModel
 
 		string[] names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
 		string[] categories = ["FR", "FR", "VG", "DY", "FR", "VG", "DY", "Unknown"];
-		object[] qtys = [12, 5, 20, 8, 15, 3, new CellValue(3.14159) { Format = "N2" }, 7];
+		string[] qtys = ["12", "5", "20", "8", "15", "3", "3.14", "7"];
 		string[] statuses = ["Open", "Closed", "Open", "Pending", "Open", "Closed", "Pending", "Open"];
-		string[] notes = ["Hello", "", "Blazor Table Editor", "Rush", "", "Backorder", "Formatted qty", ""];
+		string[] notes = ["Hello", "", "Blazor Table Editor", "Rush", "", "Backorder", "Sample note", ""];
 
 		for (var i = 0; i < names.Length; i++)
 		{
 			SetCell(i, 0, new CellValue(names[i]));
 			SetCell(i, 1, new CellValue(categories[i]));
-			if (qtys[i] is CellValue cv)
-			{
-				SetCell(i, 2, cv);
-			}
-			else
-			{
-				SetCell(i, 2, new CellValue(qtys[i]));
-			}
-
+			SetCell(i, 2, new CellValue(qtys[i]));
 			SetCell(i, 3, new CellValue(statuses[i]));
 			if (!string.IsNullOrEmpty(notes[i]))
 			{

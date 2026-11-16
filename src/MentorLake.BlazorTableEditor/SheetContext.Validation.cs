@@ -142,13 +142,7 @@ public partial class SheetContext
 
 			for (var r = 0; r < Model.RowCount; r++)
 			{
-				var cell = Model.GetCell(r, c);
-				if (cell?.Value is null)
-				{
-					continue;
-				}
-
-				var text = cell.Value.ToString() ?? string.Empty;
+				var text = Model.GetCell(r, c)?.Value;
 				if (string.IsNullOrEmpty(text))
 				{
 					continue;

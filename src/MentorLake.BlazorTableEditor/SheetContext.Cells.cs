@@ -6,7 +6,7 @@ public partial class SheetContext
 {
 	public CellValue GetValue(int row, int col) => Model.GetCell(row, col);
 
-	public string GetCellRawValue(int row, int col) => GetValue(row, col)?.ToString() ?? string.Empty;
+	public string GetCellRawValue(int row, int col) => GetValue(row, col)?.Value ?? string.Empty;
 
 	public string GetCellDisplay(int row, int col)
 	{
@@ -14,10 +14,10 @@ public partial class SheetContext
 		return ResolveValidValueDisplay(col, raw);
 	}
 
-	public void SetValue(int row, int col, object value, string format = null)
+	public void SetValue(int row, int col, string value)
 	{
 		PushUndoSnapshot();
-		if (value is null || (value is string s && string.IsNullOrEmpty(s)))
+		if (string.IsNullOrEmpty(value))
 		{
 			Model.ClearCell(row, col);
 		}
@@ -25,11 +25,6 @@ public partial class SheetContext
 		{
 			var cell = GetValue(row, col) ?? new CellValue();
 			cell.Value = value;
-			if (format is not null)
-			{
-				cell.Format = format;
-			}
-
 			Model.SetCell(row, col, cell);
 		}
 

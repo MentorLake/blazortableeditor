@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace MentorLake.BlazorTableEditor;
 
 public partial class SheetContext
@@ -36,8 +34,6 @@ public partial class SheetContext
 
 		return values
 			.OrderBy(v => v == FilterBlankKey ? 0 : 1)
-			.ThenBy(v => TryParseSortNumber(v, out var n) ? 0 : 1)
-			.ThenBy(v => TryParseSortNumber(v, out var n) ? n : 0)
 			.ThenBy(v => v, StringComparer.OrdinalIgnoreCase)
 			.ToList();
 	}
@@ -246,11 +242,5 @@ public partial class SheetContext
 
 		var row = GetFirstVisibleRow();
 		SetActiveCell(row, ActiveCell.Col, extendSelection: false, notify: false);
-	}
-
-	private static bool TryParseSortNumber(string value, out double number)
-	{
-		return double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out number)
-		       || double.TryParse(value, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.CurrentCulture, out number);
 	}
 }
