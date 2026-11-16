@@ -39,7 +39,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 
 	protected override void OnInitialized()
 	{
-		Context = new SheetContext(Model, addSampleIfEmpty: true);
+		Context = new SheetContext(Model);
 		WireContext(Context);
 		Context.SetValidator(Validator);
 		Context.SetColumnValidValues(ColumnValidValues);
@@ -55,7 +55,7 @@ public partial class MentorLakeTableEditor(IJSRuntime _jsRuntime) : IAsyncDispos
 		if (modelChanged)
 		{
 			UnwireContext(Context);
-			Context = new SheetContext(Model, addSampleIfEmpty: false);
+			Context = new SheetContext(Model);
 			WireContext(Context);
 			Context.SetValidator(Validator);
 			Context.SetColumnValidValues(ColumnValidValues);

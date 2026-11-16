@@ -33,7 +33,8 @@
 			var style = BuildCellStyle(left, top, width, height, cell);
 			var title = hasError ? Sheet.GetError(row, col) : null;
 
-			<div class="@css"
+			<div @key="new CellPosition(row, col)"
+			     class="@css"
 			     style="@style"
 			     title="@title"
 			     data-row="@row"
@@ -53,7 +54,7 @@
 					        @onchange="e => OnSelectChangedAsync(row, col, e)"
 					        @ondblclick:stopPropagation="true"
 					        @onkeydown:stopPropagation="true">
-						@if (!string.IsNullOrEmpty(rawValue) && !ContainsValue(validValues, rawValue))
+						@if (!ContainsValue(validValues, rawValue))
 						{
 							<option value="@rawValue">@rawValue</option>
 						}

@@ -291,40 +291,4 @@ public class TableDataModel
 
 		return result;
 	}
-
-	public void AddSampleData()
-	{
-		if (ColumnCount >= 5)
-		{
-			ColumnHeaders[0] = "Name";
-			ColumnHeaders[1] = "Category";
-			ColumnHeaders[2] = "Qty";
-			ColumnHeaders[3] = "Status";
-			ColumnHeaders[4] = "Notes";
-		}
-
-		string[] names = ["Alpha", "Bravo", "Charlie", "Delta", "Echo", "Foxtrot", "Golf", "Hotel"];
-		string[] categories = ["FR", "FR", "VG", "DY", "FR", "VG", "DY", "Unknown"];
-		string[] qtys = ["12", "5", "20", "8", "15", "3", "3.14", "7"];
-		string[] statuses = ["Open", "Closed", "Open", "Pending", "Open", "Closed", "Pending", "Open"];
-		string[] notes = ["Hello", "", "Blazor Table Editor", "Rush", "", "Backorder", "Sample note", ""];
-
-		for (var i = 0; i < names.Length; i++)
-		{
-			SetCell(i, 0, new CellValue(names[i]));
-			SetCell(i, 1, new CellValue(categories[i]));
-			SetCell(i, 2, new CellValue(qtys[i]));
-			SetCell(i, 3, new CellValue(statuses[i]));
-			if (!string.IsNullOrEmpty(notes[i]))
-			{
-				var note = new CellValue(notes[i]);
-				if (i == 2)
-				{
-					note.BackgroundColor = "#e6f3ff";
-				}
-
-				SetCell(i, 4, note);
-			}
-		}
-	}
 }

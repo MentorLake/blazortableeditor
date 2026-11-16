@@ -22,13 +22,9 @@ public partial class SheetContext
 	public event Action DataChanged;
 	public event Action<IReadOnlyDictionary<CellPosition, string>> ValidationChanged;
 
-	public SheetContext(TableDataModel model = null, bool addSampleIfEmpty = true)
+	public SheetContext(TableDataModel model = null)
 	{
 		Model = model ?? new TableDataModel();
-		if (addSampleIfEmpty && Model.Cells.Count == 0)
-		{
-			Model.AddSampleData();
-		}
 
 		for (var r = 0; r < Model.RowCount; r++)
 		{

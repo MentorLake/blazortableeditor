@@ -65,7 +65,7 @@ public partial class MentorLakeTableEditor
 			var model = TableDataModel.FromCsv(csv, firstRowIsHeader: true);
 
 			UnwireContext(Context);
-			Context = new SheetContext(model, addSampleIfEmpty: false);
+			Context = new SheetContext(model);
 			WireContext(Context);
 			Context.SetValidator(Validator);
 			Context.SetColumnValidValues(ColumnValidValues);
